@@ -80,10 +80,10 @@ def test_evaluator_line_continuation_and_block_comments() -> None:
     assert output.rows[-1].value == "4"
 
 
-def test_evaluator_include_warning() -> None:
+def test_evaluator_missing_include_warning() -> None:
     output = evaluate(EvalInput('include "defs.wmath"\na = 1 |'))
 
     assert output.rows[0].formula is None
     assert output.rows[0].diagnostics[0].severity == "warning"
-    assert output.warnings[0].message == "line 1: include evaluation is not implemented yet"
+    assert "include file not found" in output.warnings[0].message
     assert output.rows[1].value == "1"

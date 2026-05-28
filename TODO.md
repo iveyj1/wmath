@@ -6,12 +6,12 @@
 
 ## Immediate
 
-Milestones 006 and 007 complete. Next immediate focus is Milestone 008 include support.
+Milestone 008 complete. Next immediate focus is Milestone 009 UI polish and acceptance sweep.
 
-- [ ] Resolve include paths relative to including file directory.
-- [ ] Evaluate included files as prelude context.
-- [ ] Keep included rows out of main rendered rows.
-- [ ] Detect missing include files and cycles with visible warnings.
+- [ ] Improve status indicator evaluation state.
+- [ ] Implement value column placement from metadata.
+- [ ] Review acceptance criteria from `spec.md` section 10.
+- [ ] Polish warning bar display and long warning handling.
 
 ## Core Backlog
 
@@ -23,7 +23,7 @@ Milestones 006 and 007 complete. Next immediate focus is Milestone 008 include s
 - [x] Implement scalar value model with unit dimensions.
 - [x] Implement unit dimension model.
 - [x] Implement formatter.
-- [ ] Implement include resolver.
+- [x] Implement include resolver.
 - [x] Add pytest coverage for parser and scalar evaluator behavior.
 
 ## UI Backlog
@@ -39,7 +39,7 @@ Milestones 006 and 007 complete. Next immediate focus is Milestone 008 include s
 - [x] Increase prototype UI font sizes for readability.
 - [x] Suppress known harmless Qt AT-SPI startup warning.
 - [x] Avoid rendered-pane cursor out-of-range warnings by rendering results in a selectable label rather than a second text editor.
-- [x] Include warning bar, basic output-warning display.
+- [x] Include warning bar, missing/cycle include warnings.
 - [x] Metadata read/write.
 - [ ] Value column placement.
 
@@ -51,6 +51,6 @@ Milestones 006 and 007 complete. Next immediate focus is Milestone 008 include s
 
 ## Process Backlog
 
-- [x] Keep `PLAN.md` milestone checkboxes current through Milestone 007.
-- [x] Keep this TODO current through Milestone 007.
+- [x] Keep `PLAN.md` milestone checkboxes current through Milestone 008.
+- [x] Keep this TODO current through Milestone 008.
 - [ ] Add prompt templates or skills when workflow gaps appear.

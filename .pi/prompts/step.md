@@ -17,7 +17,7 @@ Requirements:
 - Update `docs/user.md` if user-facing behavior changed.
 - End with: 
    - completed work
-   - tests run
+   - tests run/passed/failed
    - docs status
    - remaining tasks for $ARGUMENTS or "$ARGUMENTS implementation complete"
    - a brief manual smoke test procedure if that makes sense.

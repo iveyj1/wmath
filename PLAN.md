@@ -110,10 +110,10 @@ Goal: evaluate included files as prelude context.
 
 Acceptance criteria:
 
-- [ ] Include paths resolve relative to including file directory.
-- [ ] Included rows are not rendered into main sheet.
-- [ ] Missing include warnings visible in warning bar.
-- [ ] Include cycles detected and warned.
+- [x] Include paths resolve relative to including file directory.
+- [x] Included rows are not rendered into main sheet.
+- [x] Missing include warnings visible in warning bar.
+- [x] Include cycles detected and warned.
 
 ### 009 — UI Polish and Acceptance Sweep
 
@@ -141,4 +141,4 @@ Acceptance criteria:
 
 ## Current Focus
 
-Milestones 006 and 007 are implemented. Continue with Milestone 008: include support.
+Milestone 008 is implemented. Continue with Milestone 009: UI polish and acceptance sweep.

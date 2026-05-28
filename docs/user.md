@@ -14,7 +14,7 @@ See `spec.md` for the authoritative product and language specification.
 
 ## Prototype Status
 
-Milestones 001 through 007 are implemented. The app currently provides a PySide6 desktop shell with:
+Milestones 001 through 008 are implemented. The app currently provides a PySide6 desktop shell with:
 
 - header/status row
 - Open, Save, and Save As buttons wired to placeholder messages
@@ -40,8 +40,10 @@ Milestones 001 through 007 are implemented. The app currently provides a PySide6
 - vector literals, scalar/vector ops, elementwise vector ops, indexing, slicing
 - vector helpers: `append`, `length`, `dot`
 - matrix literal validation and display
+- include evaluation as prelude context
+- include missing-file and cycle warnings
 
-Include evaluation is not implemented yet. Include directives currently show a placeholder warning because include evaluation is planned for a later milestone.
+Include files are evaluated before following rows, but their rows are not rendered in the including sheet.
 
 ## Development Launch Instructions
 
@@ -77,6 +79,7 @@ v[2] |
 v[2:] |
 dot(v, v) |
 m = [[1, 2], [3, 4]] |
+include "defs.wmath"
 ```
 
 Assignments only display values when `|` is present. Expression rows currently display their value.
@@ -101,6 +104,16 @@ work = force * d | J
 ```
 
 Legacy display suffix syntax is intentionally not required. Explicit display units such as `| J` convert/display compatible values. Incompatible display units produce row diagnostics.
+
+## Includes
+
+Include another file with:
+
+```text
+include "relative/path.wmath"
+```
+
+Paths resolve relative to the including file. Included definitions are available to later rows. Included rows are not rendered in the including sheet. Missing files and include cycles appear in the warning bar.
 
 ## Files and Metadata
 
@@ -139,7 +152,7 @@ Currently wired in the prototype:
 python -m wmath
 ```
 
-Edit source lines and confirm the rendered pane mirrors row text without terminal cursor-range warnings. Move between lines and confirm the rendered pane marks the active source row with `▶`. Add a line such as `include "defs.wmath"` and confirm a warning appears in the warning bar and rendered row.
+Edit source lines and confirm the rendered pane mirrors row text without terminal cursor-range warnings. Move between lines and confirm the rendered pane marks the active source row with `▶`. Add a missing include such as `include "missing.wmath"` and confirm a warning appears in the warning bar and rendered row.
 
 For storage behavior:
 
@@ -152,7 +165,6 @@ For storage behavior:
 
 ## Known Prototype Limitations
 
-- Include directives show placeholder warnings but are not evaluated yet.
 - User-defined unit registries are not implemented.
 - Matrix arithmetic is not implemented; matrix operations report `matrix arithmetic is not implemented yet`.
 - Metadata is written with default values only; there is not yet a UI for editing metadata.

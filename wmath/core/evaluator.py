@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Callable
 
 from wmath.core.ast import (
@@ -40,9 +41,21 @@ class Environment:
 
 def evaluate(eval_input: EvalInput) -> EvalOutput:
     env = Environment(values={}, functions={})
+    file_path = eval_input.file_path.expanduser().resolve() if eval_input.file_path else None
+    include_stack = (file_path,) if file_path is not None else ()
+    return _evaluate_source(eval_input.source, env, file_path=file_path, include_stack=include_stack)
+
+
+def _evaluate_source(
+    source: str,
+    env: Environment,
+    *,
+    file_path: Path | None,
+    include_stack: tuple[Path, ...],
+) -> EvalOutput:
     rows: list[RenderedRow] = []
     warnings: list[Diagnostic] = []
-    for line_number, line in enumerate(_logical_lines(eval_input.source), start=1):
+    for line_number, line in enumerate(_logical_lines(source), start=1):
         parsed = parse_line(line)
         diagnostics = [Diagnostic(message) for message in parsed.diagnostics]
         formula = line.rstrip() or None
@@ -52,9 +65,9 @@ def evaluate(eval_input: EvalInput) -> EvalOutput:
             rows.append(RenderedRow(line_number, formula, None, tuple(diagnostics)))
             continue
         if isinstance(stmt, IncludeStmt):
-            warning = Diagnostic("include evaluation is not implemented yet", "warning")
-            warnings.append(Diagnostic(f"line {line_number}: {warning.message}", "warning"))
-            rows.append(RenderedRow(line_number, None, None, (warning,)))
+            include_warnings = _evaluate_include(stmt, env, file_path, include_stack, line_number)
+            warnings.extend(include_warnings)
+            rows.append(RenderedRow(line_number, None, None, include_warnings))
             continue
         if not diagnostics:
             try:
@@ -74,6 +87,27 @@ def evaluate(eval_input: EvalInput) -> EvalOutput:
                 diagnostics.append(Diagnostic(str(exc)))
         rows.append(RenderedRow(line_number, formula, value_text, tuple(diagnostics)))
     return EvalOutput(rows=tuple(rows), warnings=tuple(warnings))
+
+
+def _evaluate_include(
+    stmt: IncludeStmt,
+    env: Environment,
+    current_file: Path | None,
+    include_stack: tuple[Path, ...],
+    line_number: int,
+) -> tuple[Diagnostic, ...]:
+    base_dir = current_file.parent if current_file is not None else Path.cwd()
+    target = (base_dir / stmt.path).expanduser().resolve()
+    location = f"line {line_number}: include {stmt.path!r}"
+    if target in include_stack:
+        return (Diagnostic(f"{location}: include cycle detected", "warning"),)
+    try:
+        source = target.read_text(encoding="utf-8")
+    except OSError:
+        return (Diagnostic(f"{location}: include file not found", "warning"),)
+
+    output = _evaluate_source(source, env, file_path=target, include_stack=(*include_stack, target))
+    return output.warnings
 
 
 def _format_display(value: Value, display: Expr | None, env: Environment) -> str:

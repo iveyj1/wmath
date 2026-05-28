@@ -45,7 +45,7 @@ Milestones 006 and 007 add `wmath.core.values` and expand `evaluator.py` beyond 
 - vector values support elementwise/scalar ops, indexing, slicing, `append`, `length`, and `dot`
 - matrix literals validate rows and display, while arithmetic returns the required not-implemented diagnostic
 
-Include evaluation remains a later milestone.
+Milestone 008 implements include evaluation in `evaluator.py`. Includes resolve relative to the including file, evaluate into the same environment as prelude context, do not render included rows in the parent output, and report missing/cycle cases as warnings.
 
 The core should expose a plain Python API:
 
@@ -82,6 +82,7 @@ Avoid adding runtime dependencies unless they materially simplify the prototype.
 - Current core placeholder and text-rendering tests live in `tests/test_placeholder_core.py`.
 - Parser/evaluator tests live in `tests/test_parser_evaluator.py`.
 - Unit/vector/matrix tests live in `tests/test_units_vectors.py`.
+- Include tests live in `tests/test_includes.py`.
 - Storage tests live in `tests/test_storage.py`.
 
 Useful commands:
