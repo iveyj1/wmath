@@ -24,7 +24,7 @@ Before coding, read:
 3. Keep computational core code free of Qt dependencies.
 4. Prefer low dependencies and simple Python code.
 5. Add or update tests for core behavior.
-6. Run relevant tests/lint, or explain why not.
+6. Run relevant tests/lint through `.pi/scripts/testlog run -- <command>`, or explain why not.
 7. Update `PLAN.md` and `TODO.md`.
 8. Update `docs/user.md` for user-facing changes.
 9. Update `docs/dev.md` for architecture, testing, packaging, or workflow changes.

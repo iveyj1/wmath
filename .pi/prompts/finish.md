@@ -7,7 +7,9 @@ Finish the current task end-to-end: $ARGUMENTS
 Before stopping:
 
 - If implementation is not complete, warn user.
-- Run relevant tests/lint or explain why not.
+- For each relevant test/lint command, first run `.pi/scripts/testlog status -- <command>`.
+- If status reports a fresh pass, reuse that result instead of rerunning.
+- If status is stale or missing, run the command through `.pi/scripts/testlog run -- <command>`, or explain why it cannot be run.
 - Update `PLAN.md` milestone checkboxes.
 - Update `TODO.md`.
 - Update `docs/user.md` for user-facing behavior changes.

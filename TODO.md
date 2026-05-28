@@ -6,12 +6,12 @@
 
 ## Immediate
 
-Milestone 008 complete. Next immediate focus is Milestone 009 UI polish and acceptance sweep.
+Milestone 009 complete. Next immediate focus is Milestone 010 prototype packaging.
 
-- [ ] Improve status indicator evaluation state.
-- [ ] Implement value column placement from metadata.
-- [ ] Review acceptance criteria from `spec.md` section 10.
-- [ ] Polish warning bar display and long warning handling.
+- [ ] Add README or expand docs with packaging/run summary.
+- [ ] Select packaging path: venv instructions, PyInstaller, AppImage, or Flatpak.
+- [ ] Add optional launcher script if useful.
+- [ ] Review dependency pins and distribution notes.
 
 ## Core Backlog
 
@@ -41,16 +41,17 @@ Milestone 008 complete. Next immediate focus is Milestone 009 UI polish and acce
 - [x] Avoid rendered-pane cursor out-of-range warnings by rendering results in a selectable label rather than a second text editor.
 - [x] Include warning bar, missing/cycle include warnings.
 - [x] Metadata read/write.
-- [ ] Value column placement.
+- [x] Value column placement.
 
 ## Documentation Backlog
 
-- [ ] Expand `docs/user.md` with syntax examples once parser/evaluator exists.
+- [x] Expand `docs/user.md` with current syntax examples.
 - [x] Document Milestone 001 launch and architecture notes in user/dev docs.
 - [ ] Add packaging notes after packaging approach is selected.
 
 ## Process Backlog
 
-- [x] Keep `PLAN.md` milestone checkboxes current through Milestone 008.
-- [x] Keep this TODO current through Milestone 008.
+- [x] Keep `PLAN.md` milestone checkboxes current through Milestone 009.
+- [x] Keep this TODO current through Milestone 009.
+- [x] Add scripted test-run logging/freshness checks for pi prompts.
 - [ ] Add prompt templates or skills when workflow gaps appear.

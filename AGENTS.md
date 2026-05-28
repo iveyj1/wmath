@@ -17,7 +17,8 @@ Always consult these files before implementation work:
 - Keep the evaluator/core independent from Qt UI code.
 - Keep source files small and cohesive where practical.
 - Add or update tests for parser/evaluator behavior.
-- Run relevant tests before declaring work complete.
+- Run relevant tests before declaring work complete; use `.pi/scripts/testlog run -- <command>` so results are logged.
+- Before rerunning tests in a finish/checkpoint pass, use `.pi/scripts/testlog status -- <command>` and reuse a fresh pass when available.
 - Update `PLAN.md` and `TODO.md` after each implementation step.
 - Update `docs/user.md` for user-facing behavior, syntax, shortcuts, diagnostics, persistence, or UI changes.
 - If user docs are not updated, state why no docs update was needed.

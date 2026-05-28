@@ -43,15 +43,17 @@ def test_render_text_formats_active_line_values_and_diagnostics() -> None:
         diagnostics=(Diagnostic("sample warning", "warning"),),
     )
 
-    text = format_rendered_rows(EvalOutput(rows=(row,)), active_line=2)
+    text = format_rendered_rows(
+        EvalOutput(rows=(row,)), active_line=2, value_column_percent=40, line_width=100
+    )
 
-    assert text == "▶   2  x = 1 |  ⇒ 1  ⚠ sample warning"
+    assert text == "▶   2  x = 1 |                          ⇒ 1  ⚠ sample warning"
 
 
 def test_warning_bar_formatting() -> None:
     text = format_warning_bar((Diagnostic("missing include", "warning"), Diagnostic("note", "info")))
 
-    assert text == "⚠ missing include  ⓘ note"
+    assert text == "⚠ missing include\nⓘ note"
 
 
 def test_core_models_are_qt_independent() -> None:

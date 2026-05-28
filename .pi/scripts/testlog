@@ -1,0 +1,211 @@
+#!/usr/bin/env python3
+"""Record and reuse test results for the current git worktree state.
+
+Usage:
+  .pi/scripts/testlog status -- pytest -q
+  .pi/scripts/testlog run -- pytest -q
+  .pi/scripts/testlog latest
+"""
+
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import os
+import shlex
+import subprocess
+import sys
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any
+
+ROOT = Path(__file__).resolve().parents[2]
+LOG_PATH = ROOT / ".pi" / "test-runs.jsonl"
+EXCLUDED_UNTRACKED = {
+    ".pi/test-runs.jsonl",
+    ".pi/test-runs.log",
+}
+
+
+def run_git(args: list[str], *, check: bool = False) -> subprocess.CompletedProcess[bytes]:
+    return subprocess.run(
+        ["git", *args],
+        cwd=ROOT,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=check,
+    )
+
+
+def sha256_bytes(data: bytes) -> str:
+    return hashlib.sha256(data).hexdigest()
+
+
+def git_head() -> str | None:
+    result = run_git(["rev-parse", "HEAD"])
+    if result.returncode != 0:
+        return None
+    return result.stdout.decode().strip()
+
+
+def tracked_diff_hash() -> str:
+    result = run_git([
+        "diff",
+        "--binary",
+        "HEAD",
+        "--",
+        ".",
+        ":!.pi/test-runs.jsonl",
+        ":!.pi/test-runs.log",
+    ])
+    if result.returncode != 0:
+        return "git-diff-error:" + sha256_bytes(result.stderr)
+    return sha256_bytes(result.stdout)
+
+
+def untracked_hash() -> str:
+    result = run_git(["ls-files", "--others", "--exclude-standard", "-z"])
+    if result.returncode != 0:
+        return "git-ls-error:" + sha256_bytes(result.stderr)
+
+    digest = hashlib.sha256()
+    paths = [p for p in result.stdout.split(b"\0") if p]
+    for raw_path in sorted(paths):
+        rel = raw_path.decode("utf-8", errors="surrogateescape")
+        if rel in EXCLUDED_UNTRACKED:
+            continue
+        path = ROOT / rel
+        if not path.is_file():
+            continue
+        digest.update(rel.encode("utf-8", errors="surrogateescape"))
+        digest.update(b"\0")
+        try:
+            digest.update(path.read_bytes())
+        except OSError as exc:
+            digest.update(f"read-error:{exc}".encode())
+        digest.update(b"\0")
+    return digest.hexdigest()
+
+
+def fingerprint() -> dict[str, str | None]:
+    return {
+        "head": git_head(),
+        "tracked_diff": tracked_diff_hash(),
+        "untracked": untracked_hash(),
+    }
+
+
+def command_string(argv: list[str]) -> str:
+    return shlex.join(argv)
+
+
+def read_entries() -> list[dict[str, Any]]:
+    if not LOG_PATH.exists():
+        return []
+    entries: list[dict[str, Any]] = []
+    for line in LOG_PATH.read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        try:
+            entries.append(json.loads(line))
+        except json.JSONDecodeError:
+            continue
+    return entries
+
+
+def append_entry(entry: dict[str, Any]) -> None:
+    LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
+    with LOG_PATH.open("a", encoding="utf-8") as fh:
+        fh.write(json.dumps(entry, sort_keys=True, separators=(",", ":")) + "\n")
+
+
+def latest_matching(cmd: str, *, only_pass: bool) -> dict[str, Any] | None:
+    for entry in reversed(read_entries()):
+        if entry.get("cmd") != cmd:
+            continue
+        if only_pass and entry.get("status") != "pass":
+            continue
+        return entry
+    return None
+
+
+def status(argv: list[str]) -> int:
+    cmd = command_string(argv)
+    current = fingerprint()
+    entry = latest_matching(cmd, only_pass=True)
+    if entry is None:
+        print(f"missing: no previous pass for `{cmd}`")
+        return 2
+
+    previous = entry.get("fingerprint", {})
+    if previous == current:
+        print(f"fresh pass: `{cmd}` at {entry.get('time')} exit={entry.get('exit_code')}")
+        return 0
+
+    changed = [key for key in ("head", "tracked_diff", "untracked") if previous.get(key) != current.get(key)]
+    print(f"stale: source state changed since last pass for `{cmd}` ({', '.join(changed)})")
+    return 1
+
+
+def run_command(argv: list[str]) -> int:
+    cmd = command_string(argv)
+    before = fingerprint()
+    completed = subprocess.run(argv, cwd=ROOT)
+    status_text = "pass" if completed.returncode == 0 else "fail"
+    entry = {
+        "time": datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
+        "status": status_text,
+        "cmd": cmd,
+        "exit_code": completed.returncode,
+        "fingerprint": before,
+        "python": sys.version.split()[0],
+        "cwd": str(ROOT),
+    }
+    append_entry(entry)
+    print(f"testlog: recorded {status_text} for `{cmd}`")
+    return completed.returncode
+
+
+def latest() -> int:
+    entries = read_entries()
+    if not entries:
+        print("no test runs logged")
+        return 1
+    entry = entries[-1]
+    print(json.dumps(entry, indent=2, sort_keys=True))
+    return 0
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Log test runs and detect fresh passing results.")
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    run_parser = subparsers.add_parser("run", help="run a command and append its result")
+    run_parser.add_argument("cmd", nargs=argparse.REMAINDER)
+
+    status_parser = subparsers.add_parser("status", help="check whether a command has a fresh passing result")
+    status_parser.add_argument("cmd", nargs=argparse.REMAINDER)
+
+    subparsers.add_parser("latest", help="print the latest logged run")
+
+    args = parser.parse_args()
+
+    if args.command in {"run", "status"}:
+        cmd = list(args.cmd)
+        if cmd and cmd[0] == "--":
+            cmd = cmd[1:]
+        if not cmd:
+            parser.error(f"{args.command} requires a command after --")
+        if args.command == "run":
+            return run_command(cmd)
+        return status(cmd)
+
+    if args.command == "latest":
+        return latest()
+
+    return 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

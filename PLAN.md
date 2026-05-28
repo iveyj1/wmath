@@ -121,12 +121,12 @@ Goal: satisfy v1 interaction acceptance criteria.
 
 Acceptance criteria:
 
-- [ ] Status indicator includes line count, evaluation status, dirty/save state.
-- [ ] Include warning bar implemented.
-- [ ] File action buttons and shortcuts implemented.
-- [ ] Undo/redo behavior works via editor widget.
-- [ ] Value column placement uses metadata setting.
-- [ ] Acceptance criteria from `spec.md` section 10 reviewed.
+- [x] Status indicator includes line count, evaluation status, dirty/save state.
+- [x] Include warning bar implemented.
+- [x] File action buttons and shortcuts implemented.
+- [x] Undo/redo behavior works via editor widget.
+- [x] Value column placement uses metadata setting.
+- [x] Acceptance criteria from `spec.md` section 10 reviewed.
 
 ### 010 — Prototype Packaging
 
@@ -141,4 +141,4 @@ Acceptance criteria:
 
 ## Current Focus
 
-Milestone 008 is implemented. Continue with Milestone 009: UI polish and acceptance sweep.
+Milestone 009 is implemented. Continue with Milestone 010: prototype packaging.

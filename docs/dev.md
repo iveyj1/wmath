@@ -47,6 +47,8 @@ Milestones 006 and 007 add `wmath.core.values` and expand `evaluator.py` beyond 
 
 Milestone 008 implements include evaluation in `evaluator.py`. Includes resolve relative to the including file, evaluate into the same environment as prelude context, do not render included rows in the parent output, and report missing/cycle cases as warnings.
 
+Milestone 009 polishes the UI acceptance path: status text reports line count, evaluation state, and dirty/save state; warning text is word-wrapped and multi-line; rendered value placement uses sidecar `valueColumnPercent`; and `spec.md` section 10 acceptance criteria have been reviewed against current behavior.
+
 The core should expose a plain Python API:
 
 ```python
@@ -62,7 +64,7 @@ class EvalOutput:
     warnings: list[Warning]
 ```
 
-The UI should consume `EvalOutput` and render rows without knowing parser internals. `wmath.app.main_window.MainWindow` currently follows this by calling the placeholder evaluator and rendering returned rows via core text-formatting helpers. The rendered pane is implemented as a selectable `QLabel` inside `QScrollArea`, not a second text editor, to avoid QTextCursor warnings while still supporting basic proportional scroll sync.
+The UI should consume `EvalOutput` and render rows without knowing parser internals. `wmath.app.main_window.MainWindow` currently follows this by calling the evaluator and rendering returned rows via core text-formatting helpers. The rendered pane is implemented as a selectable `QLabel` inside `QScrollArea`, not a second text editor, to avoid QTextCursor warnings while still supporting basic proportional scroll sync.
 
 ## Dependency Policy
 
@@ -88,12 +90,20 @@ Avoid adding runtime dependencies unless they materially simplify the prototype.
 Useful commands:
 
 ```bash
-pytest -q
-python -m compileall wmath tests
-.venv/bin/python -m ruff check .
+.pi/scripts/testlog run -- pytest -q
+.pi/scripts/testlog run -- python -m compileall wmath tests
+.pi/scripts/testlog run -- .venv/bin/python -m ruff check .
 ```
 
 If the active shell has the editable dev install loaded, `python -m ruff check .` is equivalent.
+
+Test runs should go through `.pi/scripts/testlog` so results are appended to `.pi/test-runs.jsonl` with the command, pass/fail status, current `HEAD`, tracked diff hash, and untracked file hash. See `.pi/scripts/README.md` for the full script manual and template reuse notes. Before rerunning a command during a finish/checkpoint pass, check freshness with:
+
+```bash
+.pi/scripts/testlog status -- pytest -q
+```
+
+A `fresh pass` result means the same command already passed for the current source tree and can be reported without rerunning. `stale` or `missing` means rerun through `testlog run`.
 
 ## Documentation Policy
 

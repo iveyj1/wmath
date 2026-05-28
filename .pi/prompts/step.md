@@ -12,7 +12,7 @@ Requirements:
 - Prefer low dependencies and simple, modifiable code.
 - Keep core logic independent from Qt UI code.
 - Add or update tests for parser/evaluator/core behavior.
-- Run relevant tests or explain why they cannot be run.
+- Run relevant tests through `.pi/scripts/testlog run -- <command>`, or explain why they cannot be run.
 - Update `PLAN.md` and `TODO.md` to reflect completed and remaining work.
 - Update `docs/user.md` if user-facing behavior changed.
 - End with: 

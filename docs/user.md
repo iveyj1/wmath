@@ -14,7 +14,7 @@ See `spec.md` for the authoritative product and language specification.
 
 ## Prototype Status
 
-Milestones 001 through 008 are implemented. The app currently provides a PySide6 desktop shell with:
+Milestones 001 through 009 are implemented. The app currently provides a PySide6 desktop shell with:
 
 - header/status row
 - Open, Save, and Save As buttons wired to placeholder messages
@@ -42,6 +42,8 @@ Milestones 001 through 008 are implemented. The app currently provides a PySide6
 - matrix literal validation and display
 - include evaluation as prelude context
 - include missing-file and cycle warnings
+- status indicator with line count, evaluation state, and dirty/save state
+- value column placement using metadata `valueColumnPercent`
 
 Include files are evaluated before following rows, but their rows are not rendered in the including sheet.
 
@@ -128,7 +130,7 @@ Saving also writes sidecar metadata next to the sheet:
 Current metadata keys:
 
 - `showValuesMode`: `explicit` or `all_assignments`
-- `valueColumnPercent`: number clamped to 40..90
+- `valueColumnPercent`: number clamped to 40..90. This controls approximate value placement in the rendered pane.
 
 Recent files are stored as local client state under the platform state directory, normally:
 
@@ -152,7 +154,7 @@ Currently wired in the prototype:
 python -m wmath
 ```
 
-Edit source lines and confirm the rendered pane mirrors row text without terminal cursor-range warnings. Move between lines and confirm the rendered pane marks the active source row with `▶`. Add a missing include such as `include "missing.wmath"` and confirm a warning appears in the warning bar and rendered row.
+Edit source lines and confirm the rendered pane mirrors row text without terminal cursor-range warnings. Move between lines and confirm the rendered pane marks the active source row with `▶`. Add a missing include such as `include "missing.wmath"` and confirm a warning appears in the warning bar and rendered row. Add an invalid row such as `missing + 1 |` and confirm status reports an error.
 
 For storage behavior:
 

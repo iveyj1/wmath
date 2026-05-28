@@ -115,6 +115,8 @@ class MainWindow(QMainWindow):
 
         self.warning_bar = QLabel("", root)
         self.warning_bar.setObjectName("warningBar")
+        self.warning_bar.setWordWrap(True)
+        self.warning_bar.setStyleSheet("QLabel#warningBar { padding: 4px; background: #fff3cd; }")
         self.warning_bar.setVisible(False)
         layout.addWidget(self.warning_bar)
 
@@ -292,7 +294,13 @@ class MainWindow(QMainWindow):
 
     def _render_output(self, output: EvalOutput) -> None:
         scroll_value = self.rendered_scroll.verticalScrollBar().value()
-        self.rendered_label.setText(format_rendered_rows(output, active_line=self._active_line + 1))
+        self.rendered_label.setText(
+            format_rendered_rows(
+                output,
+                active_line=self._active_line + 1,
+                value_column_percent=self._metadata.valueColumnPercent,
+            )
+        )
         self.rendered_scroll.verticalScrollBar().setValue(scroll_value)
         self._update_warning_bar(output)
 
@@ -315,11 +323,33 @@ class MainWindow(QMainWindow):
     def _update_status(self) -> None:
         line_count = len(self.editor.toPlainText().splitlines()) or 1
         dirty_text = "dirty" if self._dirty else "saved"
-        self.status_label.setText(f"{line_count} lines · placeholder eval · {dirty_text}")
+        eval_text = self._evaluation_status_text()
+        self.status_label.setText(f"{line_count} lines · {eval_text} · {dirty_text}")
         filename = str(self._current_file) if self._current_file else "Untitled"
         self.filename_label.setText(filename)
         dirty_mark = "*" if self._dirty else ""
         self.setWindowTitle(f"wmath — {filename}{dirty_mark}")
+
+    def _evaluation_status_text(self) -> str:
+        if self._last_output is None:
+            return "not evaluated"
+        errors = sum(
+            1
+            for row in self._last_output.rows
+            for diagnostic in row.diagnostics
+            if diagnostic.severity == "error"
+        )
+        warnings = len(self._last_output.warnings) + sum(
+            1
+            for row in self._last_output.rows
+            for diagnostic in row.diagnostics
+            if diagnostic.severity == "warning"
+        )
+        if errors:
+            return f"{errors} error" + ("s" if errors != 1 else "")
+        if warnings:
+            return f"{warnings} warning" + ("s" if warnings != 1 else "")
+        return "ok"
 
     def _update_active_line(self) -> None:
         new_active_line = self.editor.textCursor().blockNumber()
