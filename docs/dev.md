@@ -27,6 +27,8 @@ Milestone 002 adds Qt-free persistence helpers in `wmath.storage`:
 
 The PySide window owns file dialogs and user confirmations; storage helpers remain plain Python and testable without Qt.
 
+Milestone 003 adds `wmath.core.render_text`, a Qt-free plain-text row/warning formatter used by the UI. Placeholder include rows now emit warning diagnostics so the warning bar and row diagnostic path can be exercised before real include evaluation exists.
+
 The core should expose a plain Python API:
 
 ```python
@@ -42,7 +44,7 @@ class EvalOutput:
     warnings: list[Warning]
 ```
 
-The UI should consume `EvalOutput` and render rows without knowing parser internals. `wmath.app.main_window.MainWindow` currently follows this by calling the placeholder evaluator and rendering returned rows. The rendered pane is implemented as a selectable `QLabel` inside `QScrollArea`, not a second text editor, to avoid QTextCursor warnings while still supporting basic scroll sync.
+The UI should consume `EvalOutput` and render rows without knowing parser internals. `wmath.app.main_window.MainWindow` currently follows this by calling the placeholder evaluator and rendering returned rows via core text-formatting helpers. The rendered pane is implemented as a selectable `QLabel` inside `QScrollArea`, not a second text editor, to avoid QTextCursor warnings while still supporting basic proportional scroll sync.
 
 ## Dependency Policy
 
@@ -59,7 +61,7 @@ Avoid adding runtime dependencies unless they materially simplify the prototype.
 - Parser/evaluator/unit behavior should be covered by `pytest`.
 - UI behavior can initially be smoke-tested manually.
 - Core tests should not import Qt.
-- Current core placeholder tests live in `tests/test_placeholder_core.py`.
+- Current core placeholder and text-rendering tests live in `tests/test_placeholder_core.py`.
 - Storage tests live in `tests/test_storage.py`.
 
 Useful commands:

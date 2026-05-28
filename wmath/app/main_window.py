@@ -22,7 +22,13 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from wmath.core import EvalInput, EvalOutput, evaluate_placeholder
+from wmath.core import (
+    EvalInput,
+    EvalOutput,
+    evaluate_placeholder,
+    format_rendered_rows,
+    format_warning_bar,
+)
 from wmath.storage import (
     SheetMetadata,
     load_metadata,
@@ -141,9 +147,7 @@ class MainWindow(QMainWindow):
     def _wire_signals(self) -> None:
         self.editor.textChanged.connect(self._on_text_changed)
         self.editor.cursorPositionChanged.connect(self._update_active_line)
-        self.editor.verticalScrollBar().valueChanged.connect(
-            self.rendered_scroll.verticalScrollBar().setValue
-        )
+        self.editor.verticalScrollBar().valueChanged.connect(self._sync_render_scroll)
         self.undo_action.triggered.connect(self.editor.undo)
         self.redo_action.triggered.connect(self.editor.redo)
 
@@ -279,23 +283,34 @@ class MainWindow(QMainWindow):
         if mark_dirty:
             self._dirty = True
         source = self.editor.toPlainText()
-        self._last_output = evaluate_placeholder(EvalInput(source=source, file_path=self._current_file))
+        self._last_output = evaluate_placeholder(
+            EvalInput(source=source, file_path=self._current_file, metadata=self._metadata)
+        )
         self._active_line = self.editor.textCursor().blockNumber()
         self._render_output(self._last_output)
         self._update_status()
 
     def _render_output(self, output: EvalOutput) -> None:
-        rows = []
-        for row in output.rows:
-            formula = row.formula or ""
-            diagnostics = " ".join(d.message for d in row.diagnostics)
-            suffix = f"  ⚠ {diagnostics}" if diagnostics else ""
-            marker = "▶" if row.line_number == self._active_line + 1 else " "
-            rows.append(f"{marker}{row.line_number:>4}  {formula}{suffix}")
-
         scroll_value = self.rendered_scroll.verticalScrollBar().value()
-        self.rendered_label.setText("\n".join(rows))
+        self.rendered_label.setText(format_rendered_rows(output, active_line=self._active_line + 1))
         self.rendered_scroll.verticalScrollBar().setValue(scroll_value)
+        self._update_warning_bar(output)
+
+    def _update_warning_bar(self, output: EvalOutput) -> None:
+        warning_text = format_warning_bar(output.warnings)
+        self.warning_bar.setText(warning_text)
+        self.warning_bar.setVisible(bool(warning_text))
+
+    def _sync_render_scroll(self, editor_value: int) -> None:
+        editor_bar = self.editor.verticalScrollBar()
+        render_bar = self.rendered_scroll.verticalScrollBar()
+        if editor_bar.maximum() <= editor_bar.minimum():
+            render_bar.setValue(render_bar.minimum())
+            return
+
+        ratio = (editor_value - editor_bar.minimum()) / (editor_bar.maximum() - editor_bar.minimum())
+        render_value = round(render_bar.minimum() + ratio * (render_bar.maximum() - render_bar.minimum()))
+        render_bar.setValue(render_value)
 
     def _update_status(self) -> None:
         line_count = len(self.editor.toPlainText().splitlines()) or 1

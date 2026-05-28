@@ -43,12 +43,12 @@ Goal: connect source lines to rendered row objects, initially with placeholder e
 
 Acceptance criteria:
 
-- [ ] Core API accepts source text and optional file path.
-- [ ] Core returns one rendered row per source row.
-- [ ] Diagnostics can be attached to individual rows.
-- [ ] UI updates rendered pane on edit.
-- [ ] Active editor line highlights corresponding rendered row.
-- [ ] Basic scroll sync exists or is explicitly documented as pending.
+- [x] Core API accepts source text and optional file path.
+- [x] Core returns one rendered row per source row.
+- [x] Diagnostics can be attached to individual rows.
+- [x] UI updates rendered pane on edit.
+- [x] Active editor line highlights corresponding rendered row.
+- [x] Basic scroll sync exists or is explicitly documented as pending.
 
 ### 004 — Lexer and Parser
 
@@ -141,4 +141,4 @@ Acceptance criteria:
 
 ## Current Focus
 
-Milestone 002 is implemented. Continue with Milestone 003: core data model and render pipeline improvements.
+Milestone 003 is implemented. Continue with Milestone 004: lexer and parser.

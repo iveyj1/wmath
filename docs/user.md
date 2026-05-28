@@ -14,7 +14,7 @@ See `spec.md` for the authoritative product and language specification.
 
 ## Prototype Status
 
-Milestones 001 and 002 are implemented. The app currently provides a PySide6 desktop shell with:
+Milestones 001 through 003 are implemented. The app currently provides a PySide6 desktop shell with:
 
 - header/status row
 - Open, Save, and Save As buttons wired to placeholder messages
@@ -25,13 +25,14 @@ Milestones 001 and 002 are implemented. The app currently provides a PySide6 des
 - basic editor-to-render scroll sync
 - larger prototype UI fonts for readability
 - basic active-line marker in the rendered pane
+- basic warning bar for document-level warnings
 - Open, Save, and Save As for `.wmath` text files
 - dirty-state window/status markers
 - dirty-buffer confirmation before Open or MRU replacement
 - sidecar metadata read/write at `<sheet>.meta.json`
 - local MRU buttons
 
-Parser/evaluator behavior is not implemented yet.
+Parser/evaluator behavior is not implemented yet. Include directives currently show a placeholder warning because include evaluation is planned for a later milestone.
 
 ## Development Launch Instructions
 
@@ -106,7 +107,7 @@ Currently wired in the prototype:
 python -m wmath
 ```
 
-Edit source lines and confirm the rendered pane mirrors row text without terminal cursor-range warnings. Move between lines and confirm the rendered pane marks the active source row with `▶`.
+Edit source lines and confirm the rendered pane mirrors row text without terminal cursor-range warnings. Move between lines and confirm the rendered pane marks the active source row with `▶`. Add a line such as `include "defs.wmath"` and confirm a warning appears in the warning bar and rendered row.
 
 For storage behavior:
 
@@ -121,6 +122,7 @@ For storage behavior:
 
 - Parser/evaluator behavior is not yet implemented.
 - The rendered pane mirrors source text instead of evaluating formulas.
+- Include directives show placeholder warnings but are not evaluated yet.
 - Metadata is written with default values only; there is not yet a UI for editing metadata.
 - Packaging is not yet selected.
 

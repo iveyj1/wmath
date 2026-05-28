@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from wmath.core.models import EvalInput, EvalOutput, RenderedRow
+from wmath.core.models import Diagnostic, EvalInput, EvalOutput, RenderedRow
 
 
 def evaluate_placeholder(eval_input: EvalInput) -> EvalOutput:
@@ -18,8 +18,17 @@ def evaluate_placeholder(eval_input: EvalInput) -> EvalOutput:
     if not lines:
         lines = [""]
 
-    rows = tuple(
-        RenderedRow(line_number=index, formula=line.rstrip() or None)
-        for index, line in enumerate(lines, start=1)
-    )
-    return EvalOutput(rows=rows)
+    rendered_rows: list[RenderedRow] = []
+    warnings: list[Diagnostic] = []
+    for index, line in enumerate(lines, start=1):
+        text = line.rstrip()
+        diagnostics: tuple[Diagnostic, ...] = ()
+        if text.lstrip().startswith("include "):
+            diagnostic = Diagnostic("include evaluation is not implemented yet", "warning")
+            diagnostics = (diagnostic,)
+            warnings.append(Diagnostic(f"line {index}: {diagnostic.message}", "warning"))
+        rendered_rows.append(
+            RenderedRow(line_number=index, formula=text or None, diagnostics=diagnostics)
+        )
+
+    return EvalOutput(rows=tuple(rendered_rows), warnings=tuple(warnings))

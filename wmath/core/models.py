@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 
 DiagnosticSeverity = Literal["info", "warning", "error"]
 
@@ -36,6 +36,7 @@ class EvalInput:
 
     source: str
     file_path: Path | None = None
+    metadata: Any | None = None
 
 
 @dataclass(frozen=True)

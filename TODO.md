@@ -6,18 +6,19 @@
 
 ## Immediate
 
-Milestone 002 complete. Next immediate focus is Milestone 003 core data model and render pipeline improvements.
+Milestone 003 complete. Next immediate focus is Milestone 004 lexer and parser.
 
-- [ ] Make placeholder renderer expose diagnostics/warnings in the UI.
-- [ ] Refine active-line highlight rendering beyond the temporary `▶` marker.
-- [ ] Review scroll sync behavior with longer documents.
-- [ ] Consider moving row formatting out of `MainWindow` before parser/evaluator work.
+- [ ] Implement token model and lexer for v1 lexical elements.
+- [ ] Implement parser AST model.
+- [ ] Parse assignments, function declarations, expression rows, display suffixes, arrays, indexing, slicing, and includes.
+- [ ] Add parser diagnostics and pytest coverage.
 
 ## Core Backlog
 
 - [x] Define `EvalInput`, `EvalOutput`, `RenderedRow`, and `Diagnostic` model classes.
 - [ ] Implement lexer.
 - [ ] Implement parser.
+- [x] Add Qt-free plain-text row rendering helpers.
 - [ ] Implement scalar value model.
 - [ ] Implement unit dimension model.
 - [ ] Implement evaluator environment.
@@ -33,12 +34,12 @@ Milestone 002 complete. Next immediate focus is Milestone 003 core data model an
 - [x] Dirty state tracking.
 - [x] Dirty replace confirmation.
 - [x] MRU persistence.
-- [x] Editor/render scroll sync, basic.
+- [x] Editor/render scroll sync, proportional basic.
 - [x] Active line highlight, basic marker in rendered pane.
 - [x] Increase prototype UI font sizes for readability.
 - [x] Suppress known harmless Qt AT-SPI startup warning.
 - [x] Avoid rendered-pane cursor out-of-range warnings by rendering results in a selectable label rather than a second text editor.
-- [ ] Include warning bar.
+- [x] Include warning bar, basic output-warning display.
 - [x] Metadata read/write.
 - [ ] Value column placement.
 
@@ -50,6 +51,6 @@ Milestone 002 complete. Next immediate focus is Milestone 003 core data model an
 
 ## Process Backlog
 
-- [x] Keep `PLAN.md` milestone checkboxes current through Milestone 002.
-- [x] Keep this TODO current through Milestone 002.
+- [x] Keep `PLAN.md` milestone checkboxes current through Milestone 003.
+- [x] Keep this TODO current through Milestone 003.
 - [ ] Add prompt templates or skills when workflow gaps appear.
