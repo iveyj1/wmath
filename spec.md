@@ -5,7 +5,7 @@ It reflects current intended behavior and intentionally drops legacy syntax supp
 
 ## 1. Product Vision
 
-`wmath` is a free-form computational sheet for Linux desktop.
+`wmath` is a free-form computational sheet for desktop use. The current prototype targets Linux first, with Windows support planned as an experimental/source-run target before packaging is finalized.
 
 - Left pane: plain-text source.
 - Right pane: line-aligned rendered formulas, values, units, and diagnostics.
@@ -15,7 +15,7 @@ It reflects current intended behavior and intentionally drops legacy syntax supp
 
 ### In Scope (v1 baseline)
 
-- Linux desktop app.
+- Desktop app, Linux first with Windows support planned/experimental.
 - Split synchronized view (entry + rendered).
 - Top-to-bottom row evaluation with persistent environment.
 - Scalars, vectors, and matrix literals (matrix arithmetic explicitly deferred).
@@ -216,6 +216,7 @@ Metadata keys required:
 ## 7.2 MRU
 
 - MRU list is local-client state.
+- MRU storage should use platform-appropriate state locations: XDG state on Linux and local app data on Windows.
 - Display in MRU bar with clickable entries.
 
 ## 8. Rendering Rules
@@ -229,7 +230,7 @@ Metadata keys required:
 
 ## 9. Non-Functional Requirements
 
-- Startup target: < 1 second typical Linux desktop.
+- Startup target: < 1 second typical desktop in source/venv development mode.
 - Recalc target: about 100 formulas in about 500 ms.
 - Deterministic evaluation and formatting.
 - Offline operation.

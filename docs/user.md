@@ -1,6 +1,6 @@
 # wmath User Guide
 
-`wmath` is a free-form computational sheet for Linux desktop.
+`wmath` is a free-form computational sheet for desktop use. Linux is the primary prototype target; Windows source-run support is planned and currently experimental.
 
 This repository is currently in working-prototype phase. The intended app has:
 
@@ -50,14 +50,27 @@ Include files are evaluated before following rows, but their rows are not render
 
 ## Development Launch Instructions
 
+Linux/macOS-style shell:
+
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-pip install -e '.[dev]'
+python -m pip install -e '.[dev]'
 python -m wmath
 ```
 
-You can also launch through the installed script:
+Windows PowerShell (planned/experimental until smoke-tested on a real Windows system):
+
+```powershell
+py -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -e .[dev]
+python -m wmath
+```
+
+Use `python -m pip` instead of bare `pip` to avoid stale generated script paths if a checkout or `.venv` directory has moved. If the virtual environment is badly stale, remove `.venv` and recreate it.
+
+You can also launch through the installed script after installation:
 
 ```bash
 wmath
@@ -138,10 +151,22 @@ The header controls edit these metadata values:
 - `All values`: toggles `showValuesMode` between explicit `|` display and showing all evaluated values.
 - `Value %`: moves the value column position across the rendered pane width.
 
-Recent files are stored as local client state under the platform state directory, normally:
+Recent files are stored as local client state under the platform state directory. Current Linux default:
 
 ```text
 ~/.local/state/wmath/mru.json
+```
+
+Windows default:
+
+```text
+%LOCALAPPDATA%\wmath\mru.json
+```
+
+If `%LOCALAPPDATA%` is unavailable, wmath falls back to:
+
+```text
+%USERPROFILE%\AppData\Local\wmath\mru.json
 ```
 
 ## Keyboard Shortcuts
@@ -176,7 +201,8 @@ For storage behavior:
 
 - User-defined unit registries are not implemented.
 - Matrix arithmetic is not implemented; matrix operations report `matrix arithmetic is not implemented yet`.
-- Packaging is not yet selected.
+- Source/venv install is the current packaging approach; binary packaging is deferred.
+- Windows support is planned but not yet smoke-tested on a real Windows system.
 
 ## Troubleshooting
 

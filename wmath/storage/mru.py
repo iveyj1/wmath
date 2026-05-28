@@ -4,16 +4,30 @@ from __future__ import annotations
 
 import json
 import os
+from collections.abc import Mapping
 from pathlib import Path
 
 MAX_MRU_ITEMS = 8
 
 
-def default_mru_path() -> Path:
-    """Return the default local-client MRU state path."""
+def default_mru_path(
+    *,
+    os_name: str | None = None,
+    environ: Mapping[str, str] | None = None,
+    home: Path | None = None,
+) -> Path:
+    """Return the default local-client MRU state path for the current platform."""
 
-    state_home = os.environ.get("XDG_STATE_HOME")
-    base = Path(state_home).expanduser() if state_home else Path.home() / ".local" / "state"
+    platform = os.name if os_name is None else os_name
+    env = os.environ if environ is None else environ
+    home_path = Path.home() if home is None else home
+
+    if platform == "nt":
+        local_app_data = env.get("LOCALAPPDATA")
+        base = Path(local_app_data).expanduser() if local_app_data else home_path / "AppData" / "Local"
+    else:
+        state_home = env.get("XDG_STATE_HOME")
+        base = Path(state_home).expanduser() if state_home else home_path / ".local" / "state"
     return base / "wmath" / "mru.json"
 
 

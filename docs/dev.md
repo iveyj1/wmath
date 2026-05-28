@@ -2,7 +2,7 @@
 
 ## Implementation Choice
 
-The working prototype uses Python with PySide6. This favors quick iteration and direct desktop UI development while keeping the dependency set modest.
+The working prototype uses Python with PySide6. This favors quick iteration and direct desktop UI development while keeping the dependency set modest. Linux remains the primary development platform, but Windows support is now part of the prototype plan as an experimental source-run target before binary packaging is selected.
 
 ## Architectural Boundary
 
@@ -23,7 +23,7 @@ Milestone 001 uses `wmath.core.placeholder.evaluate_placeholder()` as a temporar
 Milestone 002 adds Qt-free persistence helpers in `wmath.storage`:
 
 - `files.py` handles `.wmath` text files and `<sheet>.meta.json` sidecars.
-- `mru.py` handles local-client MRU JSON state, defaulting to `~/.local/state/wmath/mru.json` unless `XDG_STATE_HOME` is set.
+- `mru.py` handles local-client MRU JSON state with platform-aware defaults: `XDG_STATE_HOME` or `~/.local/state` on Linux/Unix-like systems, and `%LOCALAPPDATA%` or `~/AppData/Local` on Windows. This stays Qt-free by using `os.name`, environment variables, and `pathlib`.
 
 The PySide window owns file dialogs and user confirmations; storage helpers remain plain Python and testable without Qt.
 
@@ -66,6 +66,24 @@ class EvalOutput:
 
 The UI should consume `EvalOutput` and render rows without knowing parser internals. `wmath.app.main_window.MainWindow` currently follows this by calling the evaluator and rendering returned rows via core text-formatting helpers. The rendered pane is implemented as a selectable `QLabel` inside `QScrollArea`, not a second text editor, while still supporting basic proportional scroll sync. A Qt `QTextCursor::setPosition` warning can still appear from editor end-of-line/end-of-file interactions and is tracked as a prototype issue.
 
+## Platform and Packaging Policy
+
+Milestone 010 treats source/venv installs as the supported packaging path for now:
+
+- Linux: venv/editable install is the primary developer/user path.
+- Windows: venv/editable install is planned and should be smoke-tested before calling it supported.
+- Future Linux binaries can evaluate AppImage or Flatpak.
+- Future Windows binaries can evaluate PyInstaller; PySide6 Qt plugin collection must be tested on real Windows.
+- `docs/windows-port.md` records the initial Windows feasibility review and porting checklist.
+
+Cross-platform design notes:
+
+- Keep `wmath.core` Qt-free and platform-neutral.
+- Keep `wmath.storage` Qt-free; use `os.name`, environment variables, and `pathlib` for platform state paths instead of Qt `QStandardPaths`.
+- Prefer forward-slash relative include paths in examples; `pathlib` should still handle native Windows paths when files are selected through dialogs.
+- Current shortcuts are compatible with normal Windows conventions through Qt.
+- The monospace font currently uses Qt's generic monospace fallback; Windows may choose Consolas or another installed font.
+
 ## Dependency Policy
 
 Prefer standard library first. Expected prototype dependencies:
@@ -87,13 +105,15 @@ Avoid adding runtime dependencies unless they materially simplify the prototype.
 - Include tests live in `tests/test_includes.py`.
 - Storage tests live in `tests/test_storage.py`.
 
-Useful commands:
+Useful local commands:
 
 ```bash
 .pi/scripts/testlog run -- pytest -q
 .pi/scripts/testlog run -- python -m compileall wmath tests
 .pi/scripts/testlog run -- .venv/bin/python -m ruff check .
 ```
+
+GitHub Actions runs the same checks on Ubuntu for pushes and pull requests.
 
 If the active shell has the editable dev install loaded, `python -m ruff check .` is equivalent.
 

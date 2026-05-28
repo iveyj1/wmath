@@ -2,6 +2,7 @@ from pathlib import Path
 
 from wmath.storage import (
     SheetMetadata,
+    default_mru_path,
     load_metadata,
     load_mru,
     metadata_path,
@@ -41,6 +42,34 @@ def test_metadata_defaults_and_clamps_invalid_values(tmp_path: Path) -> None:
 
     assert metadata.showValuesMode == "explicit"
     assert metadata.valueColumnPercent == 90.0
+
+
+def test_default_mru_path_uses_xdg_state_home(tmp_path: Path) -> None:
+    state_home = tmp_path / "state"
+
+    assert default_mru_path(os_name="posix", environ={"XDG_STATE_HOME": str(state_home)}) == (
+        state_home / "wmath" / "mru.json"
+    )
+
+
+def test_default_mru_path_uses_linux_home_fallback(tmp_path: Path) -> None:
+    assert default_mru_path(os_name="posix", environ={}, home=tmp_path) == (
+        tmp_path / ".local" / "state" / "wmath" / "mru.json"
+    )
+
+
+def test_default_mru_path_uses_windows_local_app_data(tmp_path: Path) -> None:
+    local_app_data = tmp_path / "LocalAppData"
+
+    assert default_mru_path(os_name="nt", environ={"LOCALAPPDATA": str(local_app_data)}) == (
+        local_app_data / "wmath" / "mru.json"
+    )
+
+
+def test_default_mru_path_uses_windows_home_fallback(tmp_path: Path) -> None:
+    assert default_mru_path(os_name="nt", environ={}, home=tmp_path) == (
+        tmp_path / "AppData" / "Local" / "wmath" / "mru.json"
+    )
 
 
 def test_mru_round_trip_and_update(tmp_path: Path) -> None:
