@@ -1,6 +1,6 @@
-# mathsheeet User Guide
+# wmath User Guide
 
-`mathsheeet` is a free-form computational sheet for Linux desktop.
+`wmath` is a free-form computational sheet for Linux desktop.
 
 This repository is currently in working-prototype phase. The intended app has:
 
@@ -14,20 +14,39 @@ See `spec.md` for the authoritative product and language specification.
 
 ## Prototype Status
 
-The prototype implementation has not been created yet. Current work starts with a Python/PySide6 desktop shell.
+Milestones 001 and 002 are implemented. The app currently provides a PySide6 desktop shell with:
 
-## Planned Launch Instructions
+- header/status row
+- Open, Save, and Save As buttons wired to placeholder messages
+- MRU placeholder bar
+- left source editor
+- right rendered pane
+- placeholder rendering that mirrors source lines
+- basic editor-to-render scroll sync
+- larger prototype UI fonts for readability
+- basic active-line marker in the rendered pane
+- Open, Save, and Save As for `.wmath` text files
+- dirty-state window/status markers
+- dirty-buffer confirmation before Open or MRU replacement
+- sidecar metadata read/write at `<sheet>.meta.json`
+- local MRU buttons
 
-Once Milestone 001 is implemented, the expected development launch flow will be similar to:
+Parser/evaluator behavior is not implemented yet.
+
+## Development Launch Instructions
 
 ```bash
 python -m venv .venv
 source .venv/bin/activate
 pip install -e '.[dev]'
-python -m mathsheeet
+python -m wmath
 ```
 
-These instructions will be updated when the project skeleton exists.
+You can also launch through the installed script:
+
+```bash
+wmath
+```
 
 ## Planned Sheet Syntax
 
@@ -50,16 +69,61 @@ work = force * d | J
 
 Legacy display suffix syntax is intentionally not required.
 
-## Planned Keyboard Shortcuts
+## Files and Metadata
 
-- `Ctrl+O` open
-- `Ctrl+S` save
+Sheets are plain UTF-8 text files with the `.wmath` extension.
+
+Saving also writes sidecar metadata next to the sheet:
+
+```text
+<sheet>.wmath.meta.json
+```
+
+Current metadata keys:
+
+- `showValuesMode`: `explicit` or `all_assignments`
+- `valueColumnPercent`: number clamped to 40..90
+
+Recent files are stored as local client state under the platform state directory, normally:
+
+```text
+~/.local/state/wmath/mru.json
+```
+
+## Keyboard Shortcuts
+
+Currently wired in the prototype:
+
+- `Ctrl+O` open `.wmath` file
+- `Ctrl+S` save current file, or Save As if untitled
 - `Ctrl+Shift+S` save as
-- `Ctrl+Z` undo
-- `Ctrl+Y` / `Ctrl+Shift+Z` redo
+- `Ctrl+Z` undo in the source editor
+- `Ctrl+Y` / `Ctrl+Shift+Z` redo in the source editor
+
+## Manual Smoke Test
+
+```bash
+python -m wmath
+```
+
+Edit source lines and confirm the rendered pane mirrors row text without terminal cursor-range warnings. Move between lines and confirm the rendered pane marks the active source row with `▶`.
+
+For storage behavior:
+
+1. Create or edit text.
+2. Use `Ctrl+Shift+S` and save as `example.wmath`.
+3. Confirm `example.wmath` and `example.wmath.meta.json` are created.
+4. Edit again and confirm the status/window title shows dirty state.
+5. Use `Ctrl+S` and confirm dirty state clears.
+6. Use `Ctrl+O` or an MRU button while dirty and confirm the discard prompt appears.
 
 ## Known Prototype Limitations
 
-- The app shell is not yet implemented.
 - Parser/evaluator behavior is not yet implemented.
+- The rendered pane mirrors source text instead of evaluating formulas.
+- Metadata is written with default values only; there is not yet a UI for editing metadata.
 - Packaging is not yet selected.
+
+## Troubleshooting
+
+The app suppresses a known Qt AT-SPI accessibility warning that can appear on some Linux desktops and does not affect prototype behavior. The rendered pane is a selectable text display inside a scroll area rather than an editable text widget, avoiding Qt cursor range warnings during recalculation and end-of-file editing.

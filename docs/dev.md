@@ -1,4 +1,4 @@
-# mathsheeet Development Notes
+# wmath Development Notes
 
 ## Implementation Choice
 
@@ -8,14 +8,24 @@ The working prototype uses Python with PySide6. This favors quick iteration and 
 
 Keep the computational core independent from Qt.
 
-Target layout:
+Current layout:
 
 ```text
-mathsheeet/
+wmath/
   app/        # PySide6 application, windows, widgets, actions
   core/       # parser/evaluator/unit system; no Qt imports
   storage/    # file metadata, MRU, persistence helpers
+  __main__.py # `python -m wmath` entry point
 ```
+
+Milestone 001 uses `wmath.core.placeholder.evaluate_placeholder()` as a temporary render pipeline. It returns core `EvalOutput` data and has no Qt dependency.
+
+Milestone 002 adds Qt-free persistence helpers in `wmath.storage`:
+
+- `files.py` handles `.wmath` text files and `<sheet>.meta.json` sidecars.
+- `mru.py` handles local-client MRU JSON state, defaulting to `~/.local/state/wmath/mru.json` unless `XDG_STATE_HOME` is set.
+
+The PySide window owns file dialogs and user confirmations; storage helpers remain plain Python and testable without Qt.
 
 The core should expose a plain Python API:
 
@@ -32,7 +42,7 @@ class EvalOutput:
     warnings: list[Warning]
 ```
 
-The UI should consume `EvalOutput` and render rows without knowing parser internals.
+The UI should consume `EvalOutput` and render rows without knowing parser internals. `wmath.app.main_window.MainWindow` currently follows this by calling the placeholder evaluator and rendering returned rows. The rendered pane is implemented as a selectable `QLabel` inside `QScrollArea`, not a second text editor, to avoid QTextCursor warnings while still supporting basic scroll sync.
 
 ## Dependency Policy
 
@@ -49,6 +59,18 @@ Avoid adding runtime dependencies unless they materially simplify the prototype.
 - Parser/evaluator/unit behavior should be covered by `pytest`.
 - UI behavior can initially be smoke-tested manually.
 - Core tests should not import Qt.
+- Current core placeholder tests live in `tests/test_placeholder_core.py`.
+- Storage tests live in `tests/test_storage.py`.
+
+Useful commands:
+
+```bash
+pytest -q
+python -m compileall wmath tests
+.venv/bin/python -m ruff check .
+```
+
+If the active shell has the editable dev install loaded, `python -m ruff check .` is equivalent.
 
 ## Documentation Policy
 

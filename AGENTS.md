@@ -1,6 +1,6 @@
 # Agent Instructions
 
-This project is a Python/PySide6 working prototype of `mathsheeet`, a free-form computational sheet for Linux desktop.
+This project is a Python/PySide6 working prototype of `wmath`, a free-form computational sheet for Linux desktop.
 
 Always consult these files before implementation work:
 
@@ -29,7 +29,7 @@ Always consult these files before implementation work:
 Keep a clean boundary between UI and computation:
 
 ```text
-mathsheeet/
+wmath/
   app/        # PySide6 app shell, windows, widgets, actions
   core/       # lexer, parser, evaluator, units, formatter, includes
   storage/    # sheet files, sidecar metadata, MRU state

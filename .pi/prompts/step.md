@@ -15,4 +15,9 @@ Requirements:
 - Run relevant tests or explain why they cannot be run.
 - Update `PLAN.md` and `TODO.md` to reflect completed and remaining work.
 - Update `docs/user.md` if user-facing behavior changed.
-- End with: completed work, tests run, docs status, and remaining tasks.
+- End with: 
+   - completed work
+   - tests run
+   - docs status
+   - remaining tasks for $ARGUMENTS or "$ARGUMENTS implementation complete"
+   - a brief manual smoke test procedure if that makes sense.

@@ -1,11 +1,11 @@
-# mathsheeet Specification (Implementation Baseline v0.2)
+# wmath Specification (Implementation Baseline v0.2)
 
 This document is the authoritative baseline for reimplementing the app from scratch.
 It reflects current intended behavior and intentionally drops legacy syntax support.
 
 ## 1. Product Vision
 
-`mathsheeet` is a free-form computational sheet for Linux desktop.
+`wmath` is a free-form computational sheet for Linux desktop.
 
 - Left pane: plain-text source.
 - Right pane: line-aligned rendered formulas, values, units, and diagnostics.
@@ -79,7 +79,7 @@ It reflects current intended behavior and intentionally drops legacy syntax supp
 - Assignment: `name = expression`
 - Function declaration: `f(x, y) = expression`
 - Expression-only row: `expression`
-- Include directive: `include "relative/path.msheet"`
+- Include directive: `include "relative/path.wmath"`
 
 Include directive semantics:
 
@@ -201,7 +201,7 @@ Built-in constraints:
 
 ## 7.1 Sheet Files
 
-- Main source file: plain text `.msheet`.
+- Main source file: plain text `.wmath`.
 - Sidecar metadata file: `<sheet>.meta.json`.
 
 Metadata keys required:

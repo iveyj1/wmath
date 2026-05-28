@@ -1,4 +1,4 @@
-# mathsheeet Prototype Plan
+# wmath Prototype Plan
 
 This plan guides the Python/PySide6 working prototype. `spec.md` remains authoritative.
 
@@ -14,14 +14,14 @@ Goal: create a runnable desktop shell with the intended layout but minimal behav
 
 Acceptance criteria:
 
-- [ ] Python project structure exists.
-- [ ] App launches with PySide6.
-- [ ] Header/status area is visible.
-- [ ] MRU bar placeholder is visible.
-- [ ] Split pane contains editable source text on the left.
-- [ ] Rendered rows pane exists on the right.
-- [ ] Basic keyboard shortcuts are wired or stubbed.
-- [ ] User docs explain how to launch the prototype.
+- [x] Python project structure exists.
+- [x] App launches with PySide6 when dependencies are installed.
+- [x] Header/status area is visible.
+- [x] MRU bar placeholder is visible.
+- [x] Split pane contains editable source text on the left.
+- [x] Rendered rows pane exists on the right.
+- [x] Basic keyboard shortcuts are wired or stubbed.
+- [x] User docs explain how to launch the prototype.
 
 ### 002 — Storage Basics
 
@@ -29,13 +29,13 @@ Goal: plain text sheet persistence plus sidecar metadata scaffold.
 
 Acceptance criteria:
 
-- [ ] Open `.msheet` file.
-- [ ] Save current file.
-- [ ] Save As.
-- [ ] Dirty state tracking.
-- [ ] Dirty-buffer confirmation before destructive open/MRU actions.
-- [ ] Sidecar `<sheet>.meta.json` read/write with required keys.
-- [ ] Local MRU state displayed in MRU bar.
+- [x] Open `.wmath` file.
+- [x] Save current file.
+- [x] Save As.
+- [x] Dirty state tracking.
+- [x] Dirty-buffer confirmation before destructive open/MRU actions.
+- [x] Sidecar `<sheet>.meta.json` read/write with required keys.
+- [x] Local MRU state displayed in MRU bar.
 
 ### 003 — Core Data Model and Render Pipeline
 
@@ -141,4 +141,4 @@ Acceptance criteria:
 
 ## Current Focus
 
-Start with Milestone 001.
+Milestone 002 is implemented. Continue with Milestone 003: core data model and render pipeline improvements.

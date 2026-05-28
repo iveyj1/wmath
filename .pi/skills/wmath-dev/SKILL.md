@@ -1,11 +1,11 @@
 ---
-name: mathsheeet-dev
-description: Project workflow for implementing the Python/PySide6 mathsheeet prototype. Use when continuing implementation, planning milestones, checking docs, or reviewing progress.
+name: wmath-dev
+description: Project workflow for implementing the Python/PySide6 wmath prototype. Use when continuing implementation, planning milestones, checking docs, or reviewing progress.
 ---
 
-# mathsheeet Development Workflow
+# wmath Development Workflow
 
-Use this skill for implementation turns in the `mathsheeet` prototype.
+Use this skill for implementation turns in the `wmath` prototype.
 
 ## Required Context
 
