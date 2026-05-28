@@ -6,12 +6,12 @@
 
 ## Immediate
 
-Milestones 004 and 005 complete for parser plus scalar evaluation. Next immediate focus is Milestone 006 units and display formatting.
+Milestones 006 and 007 complete. Next immediate focus is Milestone 008 include support.
 
-- [ ] Implement scalar value model with dimensions.
-- [ ] Add built-in unit registry for base/conventional units.
-- [ ] Add unit-aware arithmetic and display conversion.
-- [ ] Update formatter to show values with units.
+- [ ] Resolve include paths relative to including file directory.
+- [ ] Evaluate included files as prelude context.
+- [ ] Keep included rows out of main rendered rows.
+- [ ] Detect missing include files and cycles with visible warnings.
 
 ## Core Backlog
 
@@ -20,9 +20,9 @@ Milestones 004 and 005 complete for parser plus scalar evaluation. Next immediat
 - [x] Implement parser.
 - [x] Add Qt-free plain-text row rendering helpers.
 - [x] Implement scalar numeric evaluator environment.
-- [ ] Implement scalar value model with unit dimensions.
-- [ ] Implement unit dimension model.
-- [ ] Implement formatter.
+- [x] Implement scalar value model with unit dimensions.
+- [x] Implement unit dimension model.
+- [x] Implement formatter.
 - [ ] Implement include resolver.
 - [x] Add pytest coverage for parser and scalar evaluator behavior.
 
@@ -51,6 +51,6 @@ Milestones 004 and 005 complete for parser plus scalar evaluation. Next immediat
 
 ## Process Backlog
 
-- [x] Keep `PLAN.md` milestone checkboxes current through Milestone 005.
-- [x] Keep this TODO current through Milestone 005.
+- [x] Keep `PLAN.md` milestone checkboxes current through Milestone 007.
+- [x] Keep this TODO current through Milestone 007.
 - [ ] Add prompt templates or skills when workflow gaps appear.

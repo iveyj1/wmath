@@ -14,7 +14,7 @@ See `spec.md` for the authoritative product and language specification.
 
 ## Prototype Status
 
-Milestones 001 through 005 are implemented. The app currently provides a PySide6 desktop shell with:
+Milestones 001 through 007 are implemented. The app currently provides a PySide6 desktop shell with:
 
 - header/status row
 - Open, Save, and Save As buttons wired to placeholder messages
@@ -35,8 +35,13 @@ Milestones 001 through 005 are implemented. The app currently provides a PySide6
 - scalar numeric evaluation with persistent top-to-bottom environment
 - user-defined scalar functions
 - scalar built-ins: `sin`, `cos`, `tan`, `sqrt`, `log`, `exp`
+- unit-aware scalar arithmetic over `m`, `kg`, `s`, `K`, `N`, `J`, `Pa`, `W`, `Hz`
+- default conventional unit display and explicit `| unit` display
+- vector literals, scalar/vector ops, elementwise vector ops, indexing, slicing
+- vector helpers: `append`, `length`, `dot`
+- matrix literal validation and display
 
-Units, vector evaluation, matrix evaluation, and include evaluation are not implemented yet. Include directives currently show a placeholder warning because include evaluation is planned for a later milestone.
+Include evaluation is not implemented yet. Include directives currently show a placeholder warning because include evaluation is planned for a later milestone.
 
 ## Development Launch Instructions
 
@@ -55,7 +60,7 @@ wmath
 
 ## Current Sheet Syntax
 
-The current prototype supports scalar examples like:
+The current prototype supports scalar, unit, vector, and matrix examples like:
 
 ```text
 a = 2 |
@@ -64,6 +69,14 @@ a + b |
 double(x) = x * 2
 double(4) |
 sqrt(9) |
+length = 2 m
+force = 10 N
+work = force * length | J
+v = [1, 2, 3]
+v[2] |
+v[2:] |
+dot(v, v) |
+m = [[1, 2], [3, 4]] |
 ```
 
 Assignments only display values when `|` is present. Expression rows currently display their value.
@@ -87,7 +100,7 @@ area = length * width |
 work = force * d | J
 ```
 
-Legacy display suffix syntax is intentionally not required. Explicit display units such as `| J` parse but unit conversion is not implemented yet.
+Legacy display suffix syntax is intentionally not required. Explicit display units such as `| J` convert/display compatible values. Incompatible display units produce row diagnostics.
 
 ## Files and Metadata
 
@@ -139,9 +152,9 @@ For storage behavior:
 
 ## Known Prototype Limitations
 
-- Units and unit conversions are not yet implemented.
-- Vector and matrix evaluation are not yet implemented.
 - Include directives show placeholder warnings but are not evaluated yet.
+- User-defined unit registries are not implemented.
+- Matrix arithmetic is not implemented; matrix operations report `matrix arithmetic is not implemented yet`.
 - Metadata is written with default values only; there is not yet a UI for editing metadata.
 - Packaging is not yet selected.
 

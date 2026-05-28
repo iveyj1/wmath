@@ -114,11 +114,16 @@ class Parser:
 
     def _parse_multiplicative(self) -> Expr:
         expr = self._parse_unary()
-        while self._match_operator("*", "/"):
-            op = self._previous().text
-            right = self._parse_unary()
-            expr = BinaryExpr(expr, op, right)
-        return expr
+        while True:
+            if self._match_operator("*", "/"):
+                op = self._previous().text
+                right = self._parse_unary()
+                expr = BinaryExpr(expr, op, right)
+            elif self._starts_primary():
+                right = self._parse_unary()
+                expr = BinaryExpr(expr, "*", right)
+            else:
+                return expr
 
     def _parse_unary(self) -> Expr:
         if self._match_operator("+", "-"):
@@ -186,6 +191,9 @@ class Parser:
         if not self._check("eof"):
             self._advance()
         return NumberExpr(0.0)
+
+    def _starts_primary(self) -> bool:
+        return self._check("number") or self._check("identifier") or self._check("lparen") or self._check("lbracket")
 
     def _looks_like_function_declaration(self) -> bool:
         depth = 0

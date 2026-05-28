@@ -82,12 +82,12 @@ Goal: dimension-aware scalar arithmetic and display conversion.
 
 Acceptance criteria:
 
-- [ ] Base dimensions `(m, kg, s, K)`.
-- [ ] Built-in base and conventional units.
-- [ ] Add/subtract dimension checks.
-- [ ] Multiply/divide/power dimension handling.
-- [ ] `|` and `| unit` display syntax works.
-- [ ] Default display prefers conventional symbols where possible.
+- [x] Base dimensions `(m, kg, s, K)`.
+- [x] Built-in base and conventional units.
+- [x] Add/subtract dimension checks.
+- [x] Multiply/divide/power dimension handling.
+- [x] `|` and `| unit` display syntax works.
+- [x] Default display prefers conventional symbols where possible.
 
 ### 007 — Vectors and Matrix Groundwork
 
@@ -95,14 +95,14 @@ Goal: required vector behavior and matrix literal validation.
 
 Acceptance criteria:
 
-- [ ] Homogeneous vector values.
-- [ ] Elementwise vector operations.
-- [ ] Scalar/vector operations.
-- [ ] 1-based indexing.
-- [ ] Inclusive slicing with defaults.
-- [ ] `append`, `length`, `dot`.
-- [ ] Matrix literals parse/evaluate.
-- [ ] Matrix arithmetic reports `matrix arithmetic is not implemented yet`.
+- [x] Homogeneous vector values.
+- [x] Elementwise vector operations.
+- [x] Scalar/vector operations.
+- [x] 1-based indexing.
+- [x] Inclusive slicing with defaults.
+- [x] `append`, `length`, `dot`.
+- [x] Matrix literals parse/evaluate.
+- [x] Matrix arithmetic reports `matrix arithmetic is not implemented yet`.
 
 ### 008 — Include Support
 
@@ -141,4 +141,4 @@ Acceptance criteria:
 
 ## Current Focus
 
-Milestones 004 and 005 are implemented for parser plus scalar evaluation. Continue with Milestone 006: units and display formatting.
+Milestones 006 and 007 are implemented. Continue with Milestone 008: include support.

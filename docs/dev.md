@@ -13,7 +13,7 @@ Current layout:
 ```text
 wmath/
   app/        # PySide6 application, windows, widgets, actions
-  core/       # parser/evaluator/unit system; no Qt imports
+  core/       # lexer, parser, evaluator, values/units; no Qt imports
   storage/    # file metadata, MRU, persistence helpers
   __main__.py # `python -m wmath` entry point
 ```
@@ -36,7 +36,16 @@ Milestones 004 and 005 add Qt-free parser/evaluator modules:
 - `parser.py` parses statements and expressions with v1 precedence.
 - `evaluator.py` evaluates scalar numeric rows top-to-bottom with assignment, user functions, selected scalar built-ins, display values, and row-local diagnostics.
 
-The evaluator is intentionally scalar-only at this stage. Units, vectors, matrices, and include evaluation remain later milestones.
+Milestones 006 and 007 add `wmath.core.values` and expand `evaluator.py` beyond plain numbers:
+
+- scalar values carry dimension tuples in `(m, kg, s, K)` order
+- built-in units live in a small in-code registry
+- scalar arithmetic checks dimensions
+- display formatting handles default conventional units and explicit display units
+- vector values support elementwise/scalar ops, indexing, slicing, `append`, `length`, and `dot`
+- matrix literals validate rows and display, while arithmetic returns the required not-implemented diagnostic
+
+Include evaluation remains a later milestone.
 
 The core should expose a plain Python API:
 
@@ -72,6 +81,7 @@ Avoid adding runtime dependencies unless they materially simplify the prototype.
 - Core tests should not import Qt.
 - Current core placeholder and text-rendering tests live in `tests/test_placeholder_core.py`.
 - Parser/evaluator tests live in `tests/test_parser_evaluator.py`.
+- Unit/vector/matrix tests live in `tests/test_units_vectors.py`.
 - Storage tests live in `tests/test_storage.py`.
 
 Useful commands:
