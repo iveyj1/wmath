@@ -56,12 +56,12 @@ Goal: parse v1 baseline syntax without legacy syntax support.
 
 Acceptance criteria:
 
-- [ ] Numbers, identifiers, operators, grouping, comments, continuations.
-- [ ] Assignment, function declaration, expression rows.
-- [ ] Display separator `|` and optional display unit expression.
-- [ ] Arrays, nested arrays, indexing, slicing.
-- [ ] Include directive parse support.
-- [ ] Parser tests cover valid and invalid syntax.
+- [x] Numbers, identifiers, operators, grouping, comments, continuations.
+- [x] Assignment, function declaration, expression rows.
+- [x] Display separator `|` and optional display unit expression.
+- [x] Arrays, nested arrays, indexing, slicing.
+- [x] Include directive parse support.
+- [x] Parser tests cover valid and invalid syntax.
 
 ### 005 — Scalar Evaluation and Functions
 
@@ -69,12 +69,12 @@ Goal: top-to-bottom scalar evaluation with diagnostics.
 
 Acceptance criteria:
 
-- [ ] Persistent environment across rows.
-- [ ] Arithmetic precedence follows `spec.md`.
-- [ ] Assignment and expression rows evaluate.
-- [ ] User-defined functions with lexical parameters.
-- [ ] Required scalar built-ins exist.
-- [ ] Failure in one row does not invalidate prior rows.
+- [x] Persistent environment across rows.
+- [x] Arithmetic precedence follows `spec.md`.
+- [x] Assignment and expression rows evaluate.
+- [x] User-defined functions with lexical parameters.
+- [x] Required scalar built-ins exist.
+- [x] Failure in one row does not invalidate prior rows.
 
 ### 006 — Units and Display Formatting
 
@@ -141,4 +141,4 @@ Acceptance criteria:
 
 ## Current Focus
 
-Milestone 003 is implemented. Continue with Milestone 004: lexer and parser.
+Milestones 004 and 005 are implemented for parser plus scalar evaluation. Continue with Milestone 006: units and display formatting.

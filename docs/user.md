@@ -14,7 +14,7 @@ See `spec.md` for the authoritative product and language specification.
 
 ## Prototype Status
 
-Milestones 001 through 003 are implemented. The app currently provides a PySide6 desktop shell with:
+Milestones 001 through 005 are implemented. The app currently provides a PySide6 desktop shell with:
 
 - header/status row
 - Open, Save, and Save As buttons wired to placeholder messages
@@ -31,8 +31,12 @@ Milestones 001 through 003 are implemented. The app currently provides a PySide6
 - dirty-buffer confirmation before Open or MRU replacement
 - sidecar metadata read/write at `<sheet>.meta.json`
 - local MRU buttons
+- parser support for assignments, function declarations, expression rows, display `|`, arrays, indexing/slicing syntax, and include directives
+- scalar numeric evaluation with persistent top-to-bottom environment
+- user-defined scalar functions
+- scalar built-ins: `sin`, `cos`, `tan`, `sqrt`, `log`, `exp`
 
-Parser/evaluator behavior is not implemented yet. Include directives currently show a placeholder warning because include evaluation is planned for a later milestone.
+Units, vector evaluation, matrix evaluation, and include evaluation are not implemented yet. Include directives currently show a placeholder warning because include evaluation is planned for a later milestone.
 
 ## Development Launch Instructions
 
@@ -49,9 +53,24 @@ You can also launch through the installed script:
 wmath
 ```
 
+## Current Sheet Syntax
+
+The current prototype supports scalar examples like:
+
+```text
+a = 2 |
+b = 3 |
+a + b |
+double(x) = x * 2
+double(4) |
+sqrt(9) |
+```
+
+Assignments only display values when `|` is present. Expression rows currently display their value.
+
 ## Planned Sheet Syntax
 
-The v1 language will support examples like:
+The v1 language will support unit-aware examples like:
 
 ```text
 length = 2 m
@@ -68,7 +87,7 @@ area = length * width |
 work = force * d | J
 ```
 
-Legacy display suffix syntax is intentionally not required.
+Legacy display suffix syntax is intentionally not required. Explicit display units such as `| J` parse but unit conversion is not implemented yet.
 
 ## Files and Metadata
 
@@ -120,8 +139,8 @@ For storage behavior:
 
 ## Known Prototype Limitations
 
-- Parser/evaluator behavior is not yet implemented.
-- The rendered pane mirrors source text instead of evaluating formulas.
+- Units and unit conversions are not yet implemented.
+- Vector and matrix evaluation are not yet implemented.
 - Include directives show placeholder warnings but are not evaluated yet.
 - Metadata is written with default values only; there is not yet a UI for editing metadata.
 - Packaging is not yet selected.

@@ -25,7 +25,7 @@ from PySide6.QtWidgets import (
 from wmath.core import (
     EvalInput,
     EvalOutput,
-    evaluate_placeholder,
+    evaluate,
     format_rendered_rows,
     format_warning_bar,
 )
@@ -283,7 +283,7 @@ class MainWindow(QMainWindow):
         if mark_dirty:
             self._dirty = True
         source = self.editor.toPlainText()
-        self._last_output = evaluate_placeholder(
+        self._last_output = evaluate(
             EvalInput(source=source, file_path=self._current_file, metadata=self._metadata)
         )
         self._active_line = self.editor.textCursor().blockNumber()

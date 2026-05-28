@@ -29,6 +29,15 @@ The PySide window owns file dialogs and user confirmations; storage helpers rema
 
 Milestone 003 adds `wmath.core.render_text`, a Qt-free plain-text row/warning formatter used by the UI. Placeholder include rows now emit warning diagnostics so the warning bar and row diagnostic path can be exercised before real include evaluation exists.
 
+Milestones 004 and 005 add Qt-free parser/evaluator modules:
+
+- `lexer.py` tokenizes numbers, identifiers, strings, comments, operators, grouping, arrays, display separators, and indexing punctuation.
+- `ast.py` defines parser AST dataclasses.
+- `parser.py` parses statements and expressions with v1 precedence.
+- `evaluator.py` evaluates scalar numeric rows top-to-bottom with assignment, user functions, selected scalar built-ins, display values, and row-local diagnostics.
+
+The evaluator is intentionally scalar-only at this stage. Units, vectors, matrices, and include evaluation remain later milestones.
+
 The core should expose a plain Python API:
 
 ```python
@@ -62,6 +71,7 @@ Avoid adding runtime dependencies unless they materially simplify the prototype.
 - UI behavior can initially be smoke-tested manually.
 - Core tests should not import Qt.
 - Current core placeholder and text-rendering tests live in `tests/test_placeholder_core.py`.
+- Parser/evaluator tests live in `tests/test_parser_evaluator.py`.
 - Storage tests live in `tests/test_storage.py`.
 
 Useful commands:

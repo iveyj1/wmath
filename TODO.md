@@ -6,25 +6,25 @@
 
 ## Immediate
 
-Milestone 003 complete. Next immediate focus is Milestone 004 lexer and parser.
+Milestones 004 and 005 complete for parser plus scalar evaluation. Next immediate focus is Milestone 006 units and display formatting.
 
-- [ ] Implement token model and lexer for v1 lexical elements.
-- [ ] Implement parser AST model.
-- [ ] Parse assignments, function declarations, expression rows, display suffixes, arrays, indexing, slicing, and includes.
-- [ ] Add parser diagnostics and pytest coverage.
+- [ ] Implement scalar value model with dimensions.
+- [ ] Add built-in unit registry for base/conventional units.
+- [ ] Add unit-aware arithmetic and display conversion.
+- [ ] Update formatter to show values with units.
 
 ## Core Backlog
 
 - [x] Define `EvalInput`, `EvalOutput`, `RenderedRow`, and `Diagnostic` model classes.
-- [ ] Implement lexer.
-- [ ] Implement parser.
+- [x] Implement lexer.
+- [x] Implement parser.
 - [x] Add Qt-free plain-text row rendering helpers.
-- [ ] Implement scalar value model.
+- [x] Implement scalar numeric evaluator environment.
+- [ ] Implement scalar value model with unit dimensions.
 - [ ] Implement unit dimension model.
-- [ ] Implement evaluator environment.
 - [ ] Implement formatter.
 - [ ] Implement include resolver.
-- [ ] Add pytest test suite for core behavior.
+- [x] Add pytest coverage for parser and scalar evaluator behavior.
 
 ## UI Backlog
 
@@ -51,6 +51,6 @@ Milestone 003 complete. Next immediate focus is Milestone 004 lexer and parser.
 
 ## Process Backlog
 
-- [x] Keep `PLAN.md` milestone checkboxes current through Milestone 003.
-- [x] Keep this TODO current through Milestone 003.
+- [x] Keep `PLAN.md` milestone checkboxes current through Milestone 005.
+- [x] Keep this TODO current through Milestone 005.
 - [ ] Add prompt templates or skills when workflow gaps appear.
