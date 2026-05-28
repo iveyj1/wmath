@@ -1,6 +1,7 @@
 from wmath.core import evaluate, lex, parse_line
 from wmath.core.ast import AssignmentStmt, CallExpr, FunctionStmt, IncludeStmt
 from wmath.core.models import EvalInput
+from wmath.storage import SheetMetadata
 
 
 def test_lexer_numbers_identifiers_comments_and_display_pipe() -> None:
@@ -52,6 +53,25 @@ def test_evaluator_scalar_assignment_and_display() -> None:
 
     assert [row.value for row in output.rows] == [None, None, "5"]
     assert output.rows[2].diagnostics == ()
+
+
+def test_evaluator_hides_value_without_display_marker() -> None:
+    output = evaluate(EvalInput("a = 2\na + 1"))
+
+    assert [row.value for row in output.rows] == [None, None]
+
+
+def test_evaluator_all_values_mode_ignores_display_marker_state() -> None:
+    output = evaluate(EvalInput("a = 2\na + 1", metadata=SheetMetadata(showValuesMode="all_assignments")))
+
+    assert [row.value for row in output.rows] == ["2", "3"]
+
+
+def test_evaluator_rendered_formula_omits_display_suffix() -> None:
+    output = evaluate(EvalInput("work = 20 J | J"))
+
+    assert output.rows[0].formula == "work = 20 J"
+    assert output.rows[0].value == "20 J"
 
 
 def test_evaluator_assignment_display_and_persistent_environment() -> None:

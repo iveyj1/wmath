@@ -1,7 +1,7 @@
 # TODO
 
 ## Inbox - to be categorized/planned
-- None
+- [ ] Investigate harmless Qt `QTextCursor::setPosition` warning when editor cursor reaches line/file end.
 
 
 ## Immediate
@@ -28,10 +28,11 @@ Milestone 009 complete. Next immediate focus is Milestone 010 prototype packagin
 
 ## UI Backlog
 
+- [x] New file action.
 - [x] Open file dialog.
 - [x] Save.
 - [x] Save As.
-- [x] Dirty state tracking.
+- [x] Dirty state tracking, including undo back to saved text.
 - [x] Dirty replace confirmation.
 - [x] MRU persistence.
 - [x] Editor/render scroll sync, proportional basic.
@@ -42,6 +43,9 @@ Milestone 009 complete. Next immediate focus is Milestone 010 prototype packagin
 - [x] Include warning bar, missing/cycle include warnings.
 - [x] Metadata read/write.
 - [x] Value column placement.
+- [x] Display all values control.
+- [x] Hide values when explicit `|` removed.
+- [x] Omit `|` display suffix from rendered formulas.
 
 ## Documentation Backlog
 

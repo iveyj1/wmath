@@ -7,6 +7,7 @@ from pathlib import Path
 from PySide6.QtCore import QSignalBlocker, Qt
 from PySide6.QtGui import QAction, QFont, QKeySequence
 from PySide6.QtWidgets import (
+    QCheckBox,
     QFileDialog,
     QHBoxLayout,
     QLabel,
@@ -16,6 +17,7 @@ from PySide6.QtWidgets import (
     QPushButton,
     QScrollArea,
     QSizePolicy,
+    QSpinBox,
     QSplitter,
     QToolButton,
     QVBoxLayout,
@@ -53,6 +55,8 @@ class MainWindow(QMainWindow):
         self._last_output: EvalOutput | None = None
         self._active_line = 0
 
+        self._saved_source = ""
+
         self.setWindowTitle("wmath — Untitled")
         self._build_actions()
         self._build_ui()
@@ -61,6 +65,10 @@ class MainWindow(QMainWindow):
         self._recalculate()
 
     def _build_actions(self) -> None:
+        self.new_action = QAction("New", self)
+        self.new_action.setShortcut(QKeySequence.New)
+        self.new_action.triggered.connect(self.new_file)
+
         self.open_action = QAction("Open", self)
         self.open_action.setShortcut(QKeySequence.Open)
         self.open_action.triggered.connect(self.open_file)
@@ -98,7 +106,21 @@ class MainWindow(QMainWindow):
         self.status_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
         header_layout.addWidget(self.status_label)
 
-        for action in (self.open_action, self.save_action, self.save_as_action):
+        self.show_all_values = QCheckBox("All values", header)
+        self.show_all_values.setToolTip("Show all evaluated values, ignoring `|` display markers")
+        self.show_all_values.toggled.connect(self._on_metadata_controls_changed)
+        header_layout.addWidget(self.show_all_values)
+
+        header_layout.addWidget(QLabel("Value %", header))
+        self.value_column_percent = QSpinBox(header)
+        self.value_column_percent.setRange(40, 90)
+        self.value_column_percent.setSingleStep(5)
+        self.value_column_percent.setToolTip("Approximate value column position in rendered pane")
+        self.value_column_percent.valueChanged.connect(self._on_metadata_controls_changed)
+        header_layout.addWidget(self.value_column_percent)
+        self._sync_metadata_controls()
+
+        for action in (self.new_action, self.open_action, self.save_action, self.save_as_action):
             button = QToolButton(header)
             button.setDefaultAction(action)
             header_layout.addWidget(button)
@@ -120,29 +142,29 @@ class MainWindow(QMainWindow):
         self.warning_bar.setVisible(False)
         layout.addWidget(self.warning_bar)
 
-        splitter = QSplitter(Qt.Orientation.Horizontal, root)
-        splitter.setChildrenCollapsible(False)
+        self.splitter = QSplitter(Qt.Orientation.Horizontal, root)
+        self.splitter.setChildrenCollapsible(False)
 
-        self.editor = QPlainTextEdit(splitter)
+        self.editor = QPlainTextEdit(self.splitter)
         self.editor.setPlaceholderText("Enter wmath source here…")
         self.editor.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)
         self.editor.setPlainText("length = 2 m\nwidth = 3 m\narea = length * width |")
         self.editor.setFont(self._mono_font())
 
-        self.rendered_label = QLabel("Rendered rows will appear here.", splitter)
+        self.rendered_label = QLabel("Rendered rows will appear here.", self.splitter)
         self.rendered_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
         self.rendered_label.setFont(self._mono_font())
         self.rendered_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         self.rendered_label.setTextFormat(Qt.TextFormat.PlainText)
 
-        self.rendered_scroll = QScrollArea(splitter)
+        self.rendered_scroll = QScrollArea(self.splitter)
         self.rendered_scroll.setWidgetResizable(True)
         self.rendered_scroll.setWidget(self.rendered_label)
 
-        splitter.addWidget(self.editor)
-        splitter.addWidget(self.rendered_scroll)
-        splitter.setSizes([550, 550])
-        layout.addWidget(splitter, stretch=1)
+        self.splitter.addWidget(self.editor)
+        self.splitter.addWidget(self.rendered_scroll)
+        self.splitter.setSizes([550, 550])
+        layout.addWidget(self.splitter, stretch=1)
 
         self.setCentralWidget(root)
 
@@ -150,11 +172,13 @@ class MainWindow(QMainWindow):
         self.editor.textChanged.connect(self._on_text_changed)
         self.editor.cursorPositionChanged.connect(self._update_active_line)
         self.editor.verticalScrollBar().valueChanged.connect(self._sync_render_scroll)
+        self.splitter.splitterMoved.connect(lambda _pos, _index: self._rerender_current_output())
         self.undo_action.triggered.connect(self.editor.undo)
         self.redo_action.triggered.connect(self.editor.redo)
 
     def _install_shortcuts(self) -> None:
         for action in (
+            self.new_action,
             self.open_action,
             self.save_action,
             self.save_as_action,
@@ -162,6 +186,18 @@ class MainWindow(QMainWindow):
             self.redo_action,
         ):
             self.addAction(action)
+
+    def new_file(self) -> None:
+        if not self._confirm_discard_dirty():
+            return
+        with QSignalBlocker(self.editor):
+            self.editor.clear()
+        self._current_file = None
+        self._saved_source = ""
+        self._dirty = False
+        self._metadata = SheetMetadata()
+        self._sync_metadata_controls()
+        self._recalculate(mark_dirty=False)
 
     def open_file(self) -> None:
         if not self._confirm_discard_dirty():
@@ -206,8 +242,10 @@ class MainWindow(QMainWindow):
 
         self._current_file = path.expanduser().resolve()
         self._metadata = load_metadata(self._current_file)
+        self._sync_metadata_controls()
         with QSignalBlocker(self.editor):
             self.editor.setPlainText(source)
+        self._saved_source = source
         self._dirty = False
         self._mru_files = update_mru(self._mru_files, self._current_file)
         save_mru(self._mru_files)
@@ -224,6 +262,7 @@ class MainWindow(QMainWindow):
             return
 
         self._current_file = path
+        self._saved_source = self.editor.toPlainText()
         self._dirty = False
         self._mru_files = update_mru(self._mru_files, path)
         save_mru(self._mru_files)
@@ -270,6 +309,26 @@ class MainWindow(QMainWindow):
             return
         self._load_file(path)
 
+    def _sync_metadata_controls(self) -> None:
+        if not hasattr(self, "show_all_values"):
+            return
+        with QSignalBlocker(self.show_all_values), QSignalBlocker(self.value_column_percent):
+            self.show_all_values.setChecked(self._metadata.showValuesMode == "all_assignments")
+            self.value_column_percent.setValue(round(self._metadata.valueColumnPercent))
+
+    def _on_metadata_controls_changed(self) -> None:
+        mode = "all_assignments" if self.show_all_values.isChecked() else "explicit"
+        self._metadata = SheetMetadata(
+            showValuesMode=mode,
+            valueColumnPercent=float(self.value_column_percent.value()),
+        )
+        if self._current_file is not None:
+            try:
+                save_metadata(self._current_file, self._metadata)
+            except OSError as exc:
+                QMessageBox.warning(self, "Metadata save failed", f"Could not save metadata:\n{exc}")
+        self._recalculate(mark_dirty=False)
+
     def _mono_font(self) -> QFont:
         font = QFont("monospace")
         font.setStyleHint(QFont.StyleHint.Monospace)
@@ -282,9 +341,9 @@ class MainWindow(QMainWindow):
         self._recalculate(mark_dirty=True)
 
     def _recalculate(self, *, mark_dirty: bool = False) -> None:
-        if mark_dirty:
-            self._dirty = True
         source = self.editor.toPlainText()
+        if mark_dirty:
+            self._dirty = source != self._saved_source
         self._last_output = evaluate(
             EvalInput(source=source, file_path=self._current_file, metadata=self._metadata)
         )
@@ -299,10 +358,20 @@ class MainWindow(QMainWindow):
                 output,
                 active_line=self._active_line + 1,
                 value_column_percent=self._metadata.valueColumnPercent,
+                line_width=self._rendered_line_width(),
             )
         )
         self.rendered_scroll.verticalScrollBar().setValue(scroll_value)
         self._update_warning_bar(output)
+
+    def _rendered_line_width(self) -> int:
+        char_width = max(1, self.rendered_label.fontMetrics().horizontalAdvance("0"))
+        viewport_width = max(1, self.rendered_scroll.viewport().width() - 12)
+        return max(40, viewport_width // char_width)
+
+    def _rerender_current_output(self) -> None:
+        if self._last_output is not None:
+            self._render_output(self._last_output)
 
     def _update_warning_bar(self, output: EvalOutput) -> None:
         warning_text = format_warning_bar(output.warnings)
@@ -319,6 +388,10 @@ class MainWindow(QMainWindow):
         ratio = (editor_value - editor_bar.minimum()) / (editor_bar.maximum() - editor_bar.minimum())
         render_value = round(render_bar.minimum() + ratio * (render_bar.maximum() - render_bar.minimum()))
         render_bar.setValue(render_value)
+
+    def resizeEvent(self, event) -> None:  # noqa: N802
+        super().resizeEvent(event)
+        self._rerender_current_output()
 
     def _update_status(self) -> None:
         line_count = len(self.editor.toPlainText().splitlines()) or 1

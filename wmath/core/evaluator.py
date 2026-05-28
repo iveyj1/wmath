@@ -43,7 +43,13 @@ def evaluate(eval_input: EvalInput) -> EvalOutput:
     env = Environment(values={}, functions={})
     file_path = eval_input.file_path.expanduser().resolve() if eval_input.file_path else None
     include_stack = (file_path,) if file_path is not None else ()
-    return _evaluate_source(eval_input.source, env, file_path=file_path, include_stack=include_stack)
+    return _evaluate_source(
+        eval_input.source,
+        env,
+        file_path=file_path,
+        include_stack=include_stack,
+        eval_metadata=eval_input.metadata,
+    )
 
 
 def _evaluate_source(
@@ -52,15 +58,16 @@ def _evaluate_source(
     *,
     file_path: Path | None,
     include_stack: tuple[Path, ...],
+    eval_metadata: object | None = None,
 ) -> EvalOutput:
     rows: list[RenderedRow] = []
     warnings: list[Diagnostic] = []
     for line_number, line in enumerate(_logical_lines(source), start=1):
         parsed = parse_line(line)
         diagnostics = [Diagnostic(message) for message in parsed.diagnostics]
-        formula = line.rstrip() or None
-        value_text: str | None = None
         stmt = parsed.statement
+        formula = _formula_text(line, stmt) if stmt is not None else (line.rstrip() or None)
+        value_text: str | None = None
         if stmt is None:
             rows.append(RenderedRow(line_number, formula, None, tuple(diagnostics)))
             continue
@@ -74,7 +81,7 @@ def _evaluate_source(
                 if isinstance(stmt, AssignmentStmt):
                     value = _eval_expr(stmt.expr, env)
                     env.values[stmt.name] = value
-                    if stmt.show_value:
+                    if stmt.show_value or _show_all_values(eval_metadata):
                         value_text = _format_display(value, stmt.display, env)
                 elif isinstance(stmt, FunctionStmt):
                     env.functions[stmt.name] = UserFunction(stmt.params, stmt.expr)
@@ -82,7 +89,8 @@ def _evaluate_source(
                         diagnostics.append(Diagnostic("function definitions do not display a value", "info"))
                 elif isinstance(stmt, ExpressionStmt):
                     value = _eval_expr(stmt.expr, env)
-                    value_text = _format_display(value, stmt.display, env)
+                    if stmt.show_value or _show_all_values(eval_metadata):
+                        value_text = _format_display(value, stmt.display, env)
             except EvalError as exc:
                 diagnostics.append(Diagnostic(str(exc)))
         rows.append(RenderedRow(line_number, formula, value_text, tuple(diagnostics)))
@@ -108,6 +116,46 @@ def _evaluate_include(
 
     output = _evaluate_source(source, env, file_path=target, include_stack=(*include_stack, target))
     return output.warnings
+
+
+def _show_all_values(eval_metadata: object | None) -> bool:
+    return getattr(eval_metadata, "showValuesMode", "explicit") == "all_assignments"
+
+
+def _formula_text(line: str, stmt: object) -> str | None:
+    text = line.rstrip()
+    if not text:
+        return None
+    if isinstance(stmt, IncludeStmt):
+        return None
+    pipe_index = _top_level_pipe_index(text)
+    if pipe_index is not None:
+        text = text[:pipe_index].rstrip()
+    return text or None
+
+
+def _top_level_pipe_index(text: str) -> int | None:
+    depth = 0
+    in_string = False
+    escaped = False
+    for index, char in enumerate(text):
+        if in_string:
+            if escaped:
+                escaped = False
+            elif char == "\\":
+                escaped = True
+            elif char == '"':
+                in_string = False
+            continue
+        if char == '"':
+            in_string = True
+        elif char in "([":
+            depth += 1
+        elif char in ")]" and depth > 0:
+            depth -= 1
+        elif char == "|" and depth == 0:
+            return index
+    return None
 
 
 def _format_display(value: Value, display: Expr | None, env: Environment) -> str:

@@ -47,7 +47,7 @@ Milestones 006 and 007 add `wmath.core.values` and expand `evaluator.py` beyond 
 
 Milestone 008 implements include evaluation in `evaluator.py`. Includes resolve relative to the including file, evaluate into the same environment as prelude context, do not render included rows in the parent output, and report missing/cycle cases as warnings.
 
-Milestone 009 polishes the UI acceptance path: status text reports line count, evaluation state, and dirty/save state; warning text is word-wrapped and multi-line; rendered value placement uses sidecar `valueColumnPercent`; and `spec.md` section 10 acceptance criteria have been reviewed against current behavior.
+Milestone 009 polishes the UI acceptance path: status text reports line count, evaluation state, and dirty/save state; dirty state compares current editor text to the last new/open/save baseline so undoing back to saved text clears the marker; warning text is word-wrapped and multi-line; rendered value placement uses sidecar `valueColumnPercent` against the current rendered pane width; the header exposes `showValuesMode` and `valueColumnPercent` controls; a New action creates an untitled sheet; rendered formulas omit display suffixes; and `spec.md` section 10 acceptance criteria have been reviewed against current behavior.
 
 The core should expose a plain Python API:
 
@@ -64,7 +64,7 @@ class EvalOutput:
     warnings: list[Warning]
 ```
 
-The UI should consume `EvalOutput` and render rows without knowing parser internals. `wmath.app.main_window.MainWindow` currently follows this by calling the evaluator and rendering returned rows via core text-formatting helpers. The rendered pane is implemented as a selectable `QLabel` inside `QScrollArea`, not a second text editor, to avoid QTextCursor warnings while still supporting basic proportional scroll sync.
+The UI should consume `EvalOutput` and render rows without knowing parser internals. `wmath.app.main_window.MainWindow` currently follows this by calling the evaluator and rendering returned rows via core text-formatting helpers. The rendered pane is implemented as a selectable `QLabel` inside `QScrollArea`, not a second text editor, while still supporting basic proportional scroll sync. A Qt `QTextCursor::setPosition` warning can still appear from editor end-of-line/end-of-file interactions and is tracked as a prototype issue.
 
 ## Dependency Policy
 

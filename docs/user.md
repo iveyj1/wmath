@@ -17,7 +17,7 @@ See `spec.md` for the authoritative product and language specification.
 Milestones 001 through 009 are implemented. The app currently provides a PySide6 desktop shell with:
 
 - header/status row
-- Open, Save, and Save As buttons wired to placeholder messages
+- New, Open, Save, and Save As buttons
 - MRU placeholder bar
 - left source editor
 - right rendered pane
@@ -43,7 +43,8 @@ Milestones 001 through 009 are implemented. The app currently provides a PySide6
 - include evaluation as prelude context
 - include missing-file and cycle warnings
 - status indicator with line count, evaluation state, and dirty/save state
-- value column placement using metadata `valueColumnPercent`
+- value display mode control: explicit `|` only or all values
+- value column position control using metadata `valueColumnPercent`
 
 Include files are evaluated before following rows, but their rows are not rendered in the including sheet.
 
@@ -84,7 +85,7 @@ m = [[1, 2], [3, 4]] |
 include "defs.wmath"
 ```
 
-Assignments only display values when `|` is present. Expression rows currently display their value.
+Rows display values only when `|` is present unless the `All values` checkbox is enabled. The rendered pane omits the `|` suffix and shows only formula text plus value.
 
 ## Planned Sheet Syntax
 
@@ -130,7 +131,12 @@ Saving also writes sidecar metadata next to the sheet:
 Current metadata keys:
 
 - `showValuesMode`: `explicit` or `all_assignments`
-- `valueColumnPercent`: number clamped to 40..90. This controls approximate value placement in the rendered pane.
+- `valueColumnPercent`: number clamped to 40..90. This controls approximate value placement as a percentage of the rendered pane width.
+
+The header controls edit these metadata values:
+
+- `All values`: toggles `showValuesMode` between explicit `|` display and showing all evaluated values.
+- `Value %`: moves the value column position across the rendered pane width.
 
 Recent files are stored as local client state under the platform state directory, normally:
 
@@ -142,6 +148,7 @@ Recent files are stored as local client state under the platform state directory
 
 Currently wired in the prototype:
 
+- `Ctrl+N` new untitled sheet
 - `Ctrl+O` open `.wmath` file
 - `Ctrl+S` save current file, or Save As if untitled
 - `Ctrl+Shift+S` save as
@@ -154,7 +161,7 @@ Currently wired in the prototype:
 python -m wmath
 ```
 
-Edit source lines and confirm the rendered pane mirrors row text without terminal cursor-range warnings. Move between lines and confirm the rendered pane marks the active source row with `▶`. Add a missing include such as `include "missing.wmath"` and confirm a warning appears in the warning bar and rendered row. Add an invalid row such as `missing + 1 |` and confirm status reports an error.
+Edit source lines and confirm the rendered pane updates. Move between lines and confirm the rendered pane marks the active source row with `▶`. Remove `|` from a row and confirm its value hides; enable `All values` and confirm values return. Change `Value %` and confirm the value column moves. Add a missing include such as `include "missing.wmath"` and confirm a warning appears in the warning bar and rendered row. Add an invalid row such as `missing + 1 |` and confirm status reports an error.
 
 For storage behavior:
 
@@ -162,16 +169,15 @@ For storage behavior:
 2. Use `Ctrl+Shift+S` and save as `example.wmath`.
 3. Confirm `example.wmath` and `example.wmath.meta.json` are created.
 4. Edit again and confirm the status/window title shows dirty state.
-5. Use `Ctrl+S` and confirm dirty state clears.
+5. Use `Ctrl+S` and confirm dirty state clears. Edit, then undo back to saved text and confirm dirty state clears again.
 6. Use `Ctrl+O` or an MRU button while dirty and confirm the discard prompt appears.
 
 ## Known Prototype Limitations
 
 - User-defined unit registries are not implemented.
 - Matrix arithmetic is not implemented; matrix operations report `matrix arithmetic is not implemented yet`.
-- Metadata is written with default values only; there is not yet a UI for editing metadata.
 - Packaging is not yet selected.
 
 ## Troubleshooting
 
-The app suppresses a known Qt AT-SPI accessibility warning that can appear on some Linux desktops and does not affect prototype behavior. The rendered pane is a selectable text display inside a scroll area rather than an editable text widget, avoiding Qt cursor range warnings during recalculation and end-of-file editing.
+The app suppresses a known Qt AT-SPI accessibility warning that can appear on some Linux desktops and does not affect prototype behavior. A harmless `QTextCursor::setPosition` warning can still appear from Qt text editing at end-of-line/end-of-file interactions; this is a known prototype issue.

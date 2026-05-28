@@ -49,14 +49,15 @@ It reflects current intended behavior and intentionally drops legacy syntax supp
 
 ## 3.3 File Actions
 
-- Open, Save, Save As buttons.
+- New, Open, Save, Save As buttons.
 - Keyboard shortcuts:
+  - `Ctrl+N` new
   - `Ctrl+O` open
   - `Ctrl+S` save
   - `Ctrl+Shift+S` save as
   - `Ctrl+Z` undo
   - `Ctrl+Y` / `Ctrl+Shift+Z` redo
-- Dirty-buffer confirmation shown before replacing source via open/MRU.
+- Dirty-buffer confirmation shown before replacing source via new/open/MRU.
 
 ## 4. Language Specification
 
@@ -99,6 +100,9 @@ Legacy `=` display suffix is not required.
 
 Rules:
 
+- In explicit display mode, rows without `|` do not show values.
+- `showValuesMode = all_assignments` shows evaluated values even without `|`.
+- The rendered formula omits the display suffix; `|` controls value display but is not shown in the rendered pane.
 - If a display unit expression is dimensionally compatible, value is converted.
 - If incompatible, row gets a diagnostic.
 
@@ -218,7 +222,7 @@ Metadata keys required:
 
 - One rendered row per source row (except include directives render blank/no formula state).
 - Render row may contain:
-  - normalized formula text
+  - normalized formula text without display suffix
   - optional value/unit
   - optional diagnostics
 - Value column placement driven by `valueColumnPercent`.

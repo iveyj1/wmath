@@ -32,7 +32,7 @@ Acceptance criteria:
 - [x] Open `.wmath` file.
 - [x] Save current file.
 - [x] Save As.
-- [x] Dirty state tracking.
+- [x] Dirty state tracking, including clean state when undo returns to saved text.
 - [x] Dirty-buffer confirmation before destructive open/MRU actions.
 - [x] Sidecar `<sheet>.meta.json` read/write with required keys.
 - [x] Local MRU state displayed in MRU bar.
@@ -123,9 +123,9 @@ Acceptance criteria:
 
 - [x] Status indicator includes line count, evaluation status, dirty/save state.
 - [x] Include warning bar implemented.
-- [x] File action buttons and shortcuts implemented.
-- [x] Undo/redo behavior works via editor widget.
-- [x] Value column placement uses metadata setting.
+- [x] File action buttons and shortcuts implemented, including New.
+- [x] Undo/redo behavior works via editor widget and dirty state follows saved text.
+- [x] Value column placement and display mode use metadata settings.
 - [x] Acceptance criteria from `spec.md` section 10 reviewed.
 
 ### 010 — Prototype Packaging
