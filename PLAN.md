@@ -4,7 +4,7 @@ This plan guides the Python/PySide6 working prototype. `spec.md` remains authori
 
 ## Current Strategy
 
-Build a low-dependency desktop prototype in Python using PySide6. Linux remains the primary development target; Windows support should be kept viable and treated as experimental until source-run and smoke tests pass on a real Windows system. Keep the math/evaluation core independent from Qt so the UI can be replaced later if needed.
+Build a low-dependency desktop prototype in Python using PySide6. Linux remains the primary development target; Windows source-run support has been smoke-tested and should be kept viable. Keep the math/evaluation core independent from Qt so the UI can be replaced later if needed.
 
 ## Milestones
 
@@ -138,9 +138,9 @@ Acceptance criteria:
 - [x] README or docs describe Windows venv install/run with `python -m pip`.
 - [x] MRU/state path selection is platform-aware and remains Qt-free.
 - [x] Dependency list is minimal and reviewed for Linux/Windows source installs.
-- [ ] Optional launcher script exists if useful and does not obscure Windows instructions.
+- [x] Optional launcher script exists if useful and does not obscure Windows instructions.
 - [x] Packaging approach selected: source/venv for now; PyInstaller/AppImage/Flatpak deferred or scoped explicitly.
 
 ## Current Focus
 
-Milestone 010 is partially implemented: Linux/Windows source-run docs exist, source/venv is selected for now, and MRU state paths are platform-aware. Remaining focus: decide whether an optional launcher script is useful, smoke-test Windows on a real system, and keep future binary packaging notes current.
+Milestone 010 is implemented. Next focus should be selected from remaining backlog, such as addressing the Qt cursor warning, improving manual examples, or starting a future packaging/binary distribution milestone.

@@ -1,6 +1,6 @@
 # wmath User Guide
 
-`wmath` is a free-form computational sheet for desktop use. Linux is the primary prototype target; Windows source-run support is planned and currently experimental.
+`wmath` is a free-form computational sheet for desktop use. Linux is the primary prototype target; Windows source-run support has been smoke-tested.
 
 This repository is currently in working-prototype phase. The intended app has:
 
@@ -59,7 +59,7 @@ python -m pip install -e '.[dev]'
 python -m wmath
 ```
 
-Windows PowerShell (planned/experimental until smoke-tested on a real Windows system):
+Windows PowerShell:
 
 ```powershell
 py -m venv .venv
@@ -202,7 +202,7 @@ For storage behavior:
 - User-defined unit registries are not implemented.
 - Matrix arithmetic is not implemented; matrix operations report `matrix arithmetic is not implemented yet`.
 - Source/venv install is the current packaging approach; binary packaging is deferred.
-- Windows support is planned but not yet smoke-tested on a real Windows system.
+- Windows source-run support has been smoke-tested; binary packaging is still deferred.
 
 ## Troubleshooting
 

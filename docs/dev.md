@@ -2,7 +2,7 @@
 
 ## Implementation Choice
 
-The working prototype uses Python with PySide6. This favors quick iteration and direct desktop UI development while keeping the dependency set modest. Linux remains the primary development platform, but Windows support is now part of the prototype plan as an experimental source-run target before binary packaging is selected.
+The working prototype uses Python with PySide6. This favors quick iteration and direct desktop UI development while keeping the dependency set modest. Linux remains the primary development platform, and Windows source-run support has been smoke-tested before binary packaging is selected.
 
 ## Architectural Boundary
 
@@ -71,7 +71,7 @@ The UI should consume `EvalOutput` and render rows without knowing parser intern
 Milestone 010 treats source/venv installs as the supported packaging path for now:
 
 - Linux: venv/editable install is the primary developer/user path.
-- Windows: venv/editable install is planned and should be smoke-tested before calling it supported.
+- Windows: venv/editable install has been smoke-tested and is the current Windows path.
 - Future Linux binaries can evaluate AppImage or Flatpak.
 - Future Windows binaries can evaluate PyInstaller; PySide6 Qt plugin collection must be tested on real Windows.
 - `docs/windows-port.md` records the initial Windows feasibility review and porting checklist.

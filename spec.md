@@ -5,7 +5,7 @@ It reflects current intended behavior and intentionally drops legacy syntax supp
 
 ## 1. Product Vision
 
-`wmath` is a free-form computational sheet for desktop use. The current prototype targets Linux first, with Windows support planned as an experimental/source-run target before packaging is finalized.
+`wmath` is a free-form computational sheet for desktop use. The current prototype targets Linux first, with Windows source-run support smoke-tested before binary packaging is finalized.
 
 - Left pane: plain-text source.
 - Right pane: line-aligned rendered formulas, values, units, and diagnostics.
@@ -15,7 +15,7 @@ It reflects current intended behavior and intentionally drops legacy syntax supp
 
 ### In Scope (v1 baseline)
 
-- Desktop app, Linux first with Windows support planned/experimental.
+- Desktop app, Linux first with Windows source-run support.
 - Split synchronized view (entry + rendered).
 - Top-to-bottom row evaluation with persistent environment.
 - Scalars, vectors, and matrix literals (matrix arithmetic explicitly deferred).

@@ -2,7 +2,7 @@
 
 `wmath` is a Python/PySide6 working prototype of a free-form computational sheet.
 
-Linux is the primary development target. Windows source-run support is planned and experimental; the code is kept cross-platform where practical.
+Linux is the primary development target. Windows source-run support has been smoke-tested and is kept viable, while binary packaging remains deferred.
 
 ## Run from source
 
@@ -32,7 +32,7 @@ python -m pip install -e .[dev]
 python -m wmath
 ```
 
-Windows support still needs real-machine smoke testing before it is considered supported.
+Windows source-run support has been smoke-tested with the venv instructions above.
 
 ## Tests
 
@@ -53,4 +53,4 @@ The current packaging path is source/venv installation. Binary packaging is defe
 
 - Matrix arithmetic is intentionally not implemented yet.
 - User-defined unit registries are not implemented yet.
-- Windows source-run support is planned but not yet smoke-tested.
+- Binary packaging is deferred; use source/venv installs for now.

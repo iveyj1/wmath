@@ -6,7 +6,7 @@
 
 ## Immediate
 
-Milestone 009 complete. Next immediate focus is Milestone 010 cross-platform source-run and packaging readiness.
+Milestone 010 complete. Next immediate focus is not selected.
 
 - [x] Add README or expand docs with Linux venv install/run summary.
 - [x] Add Windows venv install/run summary.
@@ -14,9 +14,9 @@ Milestone 009 complete. Next immediate focus is Milestone 010 cross-platform sou
 - [x] Add tests for platform MRU/state path selection with mocked environment values.
 - [x] Select packaging path: source/venv for now; defer binary packaging unless explicitly scoped.
 - [x] Capture future binary packaging candidates: PyInstaller for Windows, AppImage/Flatpak for Linux.
-- [ ] Add optional launcher script if useful.
+- [x] Add optional launcher script if useful.
 - [x] Review dependency pins and distribution notes for Linux and Windows source installs.
-- [ ] Smoke-test Windows source run on a real Windows system.
+- [x] Smoke-test Windows source run on a real Windows system.
 - [x] Add GitHub Actions CI for pytest, compileall, and ruff.
 
 ## Core Backlog
