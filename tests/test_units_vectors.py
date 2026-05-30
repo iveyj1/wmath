@@ -18,6 +18,24 @@ def test_explicit_display_unit_compatible() -> None:
     assert output.rows[2].value == "20 J"
 
 
+def test_user_defined_display_unit_keeps_requested_label() -> None:
+    output = evaluate(EvalInput("ft = 0.3048 m\nd = 20 m | ft"))
+
+    assert output.rows[1].value == "65.6167979003 ft"
+
+
+def test_compound_user_defined_display_unit_keeps_requested_label() -> None:
+    output = evaluate(EvalInput("ft = 0.3048 m\nminute = 60 s\nspeed = 10 m / s | ft / minute"))
+
+    assert output.rows[2].value == "1968.50393701 ft/minute"
+
+
+def test_display_unit_rejects_arbitrary_calculation() -> None:
+    output = evaluate(EvalInput("ft = 0.3048 m\nd = 20 m | 2 ft"))
+
+    assert output.rows[1].diagnostics[0].message == "display unit must be a unit-name expression"
+
+
 def test_incompatible_unit_addition_diagnostic() -> None:
     output = evaluate(EvalInput("1 m + 1 s |"))
 
@@ -26,6 +44,70 @@ def test_incompatible_unit_addition_diagnostic() -> None:
 
 def test_power_and_sqrt_units() -> None:
     assert values("area = (3 m)^2 |\nsqrt(area) |") == ["9 m^2", "3 m"]
+
+
+def test_si_base_units_include_current_amount_and_luminosity() -> None:
+    output = evaluate(EvalInput("current = 2 A |\namount = 3 mol |\nbrightness = 4 cd |"))
+
+    assert [row.value for row in output.rows] == ["2 A", "3 mol", "4 cd"]
+
+
+def test_si_base_units_combine_in_fallback_formatting() -> None:
+    output = evaluate(EvalInput("charge_like = 2 A * s |\nexotic = 3 mol / cd |"))
+
+    assert [row.value for row in output.rows] == ["2 C", "3 mol cd^-1"]
+
+
+def test_si_named_derived_units_display_by_default() -> None:
+    output = evaluate(
+        EvalInput(
+            "\n".join(
+                [
+                    "freq = 2 / s |",
+                    "force = 3 kg * m / s^2 |",
+                    "pressure = 4 N / m^2 |",
+                    "energy = 5 N * m |",
+                    "power = 6 J / s |",
+                    "charge = 7 A * s |",
+                    "voltage = 8 W / A |",
+                    "capacitance = 9 C / V |",
+                    "resistance = 10 V / A |",
+                    "conductance = 11 A / V |",
+                    "flux = 12 V * s |",
+                    "field = 13 Wb / m^2 |",
+                    "inductance = 14 Wb / A |",
+                    "illuminance = 15 cd / m^2 |",
+                    "catalytic = 16 mol / s |",
+                    "absorbed = 17 J / kg |",
+                ]
+            )
+        )
+    )
+
+    assert [row.value for row in output.rows] == [
+        "2 Hz",
+        "3 N",
+        "4 Pa",
+        "5 J",
+        "6 W",
+        "7 C",
+        "8 V",
+        "9 F",
+        "10 ohm",
+        "11 S",
+        "12 Wb",
+        "13 T",
+        "14 H",
+        "15 lx",
+        "16 kat",
+        "17 Gy",
+    ]
+
+
+def test_ambiguous_si_named_derived_units_are_available_explicitly() -> None:
+    output = evaluate(EvalInput("angle = 2 | rad\nsolid = 3 | sr\ntemp = 4 K | degC\ndose = 5 J / kg | Sv"))
+
+    assert [row.value for row in output.rows] == ["2 rad", "3 sr", "4 degC", "5 Sv"]
 
 
 def test_vector_elementwise_and_scalar_ops() -> None:

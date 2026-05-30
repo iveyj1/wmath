@@ -38,10 +38,11 @@ Milestones 004 and 005 add Qt-free parser/evaluator modules:
 
 Milestones 006 and 007 add `wmath.core.values` and expand `evaluator.py` beyond plain numbers:
 
-- scalar values carry dimension tuples in `(m, kg, s, K)` order
-- built-in units live in a small in-code registry
+- scalar values carry dimension tuples in `(m, kg, s, A, K, mol, cd)` order
+- built-in units live in a small in-code registry containing the seven SI base units and the 22 named SI derived units
 - scalar arithmetic checks dimensions
 - display formatting handles default conventional units and explicit display units
+- explicit display units can be ordinary sheet variables, including variables imported through includes; the evaluator preserves the requested unit-expression label while restricting display units to unit-name arithmetic rather than arbitrary calculations
 - vector values support elementwise/scalar ops, indexing, slicing, `append`, `length`, and `dot`
 - matrix literals validate rows and display, while arithmetic returns the required not-implemented diagnostic
 

@@ -34,6 +34,21 @@ python -m wmath
 
 Windows source-run support has been smoke-tested with the venv instructions above.
 
+## Units
+
+The seven SI base units and 22 named SI derived units are built in. Use ASCII names `ohm` and `degC` for `Ω` and `°C`.
+
+## Custom display units
+
+Unit-like variables can be defined in sheets or includes and used after `|`:
+
+```text
+ft = 0.3048 m
+distance = 20 m | ft
+```
+
+The value is converted and rendered with the requested label, e.g. `65.6167979003 ft`.
+
 ## Tests
 
 ```bash

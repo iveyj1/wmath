@@ -1,0 +1,14 @@
+# Definitions for manual wmath smoke testing
+
+# User-defined display units
+inch = 0.0254 m
+ft = 12 inch
+yd = 3 ft
+mi = 5280 ft
+minute = 60 s
+hr = 60 minute
+lbf = 4.4482216152605 N
+acre = 43560 ft^2
+
+# A simple function used by the main test sheet
+double(x) = x * 2

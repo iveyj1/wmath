@@ -20,7 +20,7 @@ It reflects current intended behavior and intentionally drops legacy syntax supp
 - Top-to-bottom row evaluation with persistent environment.
 - Scalars, vectors, and matrix literals (matrix arithmetic explicitly deferred).
 - User-defined functions and selected built-in functions.
-- Unit-aware arithmetic over base dimensions `(m, kg, s, K)`.
+- Unit-aware arithmetic over SI base dimensions `(m, kg, s, A, K, mol, cd)`.
 - Save/load, MRU display, include support, undo/redo.
 
 ### Out of Scope (v1)
@@ -28,7 +28,7 @@ It reflects current intended behavior and intentionally drops legacy syntax supp
 - Collaborative editing/cloud sync.
 - Full symbolic algebra/CAS.
 - Full matrix algebra.
-- User-defined unit registry from YAML (tracked backlog item 99).
+- Separate user-defined unit registry from YAML; ordinary sheets/includes can define unit-like variables for now.
 
 ## 3. UI and Interaction Requirements
 
@@ -97,6 +97,7 @@ Legacy `=` display suffix is not required.
   - Example: `area = length * width |`
 - Show value in requested unit: append `| <unit expression>`
   - Example: `work = force * d | J`
+  - Example with user-defined unit variable: `ft = 0.3048 m`, then `d = 20 m | ft`
 
 Rules:
 
@@ -104,6 +105,8 @@ Rules:
 - `showValuesMode = all_assignments` shows evaluated values even without `|`.
 - The rendered formula omits the display suffix; `|` controls value display but is not shown in the rendered pane.
 - If a display unit expression is dimensionally compatible, value is converted.
+- Explicit display suffix text is preserved as the rendered unit label, so user-defined units such as `ft` render as `ft` rather than the built-in preferred unit for the same dimension.
+- Display unit expressions are intentionally limited to unit-name arithmetic: names combined with `*`, `/`, and integer powers. Arbitrary calculations such as `| 2 ft` are not supported.
 - If incompatible, row gets a diagnostic.
 
 ## 4.4 Expressions and Precedence
@@ -179,13 +182,14 @@ Built-in constraints:
 
 ## 6.1 Base Dimensions
 
-- Canonical basis: `(m, kg, s, K)`.
+- Canonical basis: `(m, kg, s, A, K, mol, cd)`.
 - Internal representation: exponent tuple per basis dimension.
 
 ## 6.2 Built-in Units
 
-- Base: `m`, `kg`, `s`, `K`
-- Conventional at minimum: `N`, `J`, `Pa`, `W`, `Hz`
+- Base: `m`, `kg`, `s`, `A`, `K`, `mol`, `cd`
+- Named SI derived units: `rad`, `sr`, `Hz`, `N`, `Pa`, `J`, `W`, `C`, `V`, `F`, `ohm`, `S`, `Wb`, `T`, `H`, `degC`, `lm`, `lx`, `Bq`, `Gy`, `Sv`, `kat`
+- ASCII identifiers are used where SI symbols are not valid identifiers: `ohm` for `Ω`, `degC` for `°C`.
 
 ## 6.3 Unit Rules
 
@@ -197,7 +201,7 @@ Built-in constraints:
 
 ## 6.4 Display Unit Resolution
 
-- Default display prefers conventional symbol when exact match.
+- Default display prefers built-in named SI symbols when there is an exact dimensional match and the dimension is not ambiguous.
 - Otherwise display factored base-unit form.
 - Explicit `| unit_expr` overrides default display unit.
 

@@ -82,8 +82,8 @@ Goal: dimension-aware scalar arithmetic and display conversion.
 
 Acceptance criteria:
 
-- [x] Base dimensions `(m, kg, s, K)`.
-- [x] Built-in base and conventional units.
+- [x] SI base dimensions `(m, kg, s, A, K, mol, cd)`.
+- [x] Built-in SI base units and 22 named SI derived units.
 - [x] Add/subtract dimension checks.
 - [x] Multiply/divide/power dimension handling.
 - [x] `|` and `| unit` display syntax works.
@@ -141,6 +141,18 @@ Acceptance criteria:
 - [x] Optional launcher script exists if useful and does not obscure Windows instructions.
 - [x] Packaging approach selected: source/venv for now; PyInstaller/AppImage/Flatpak deferred or scoped explicitly.
 
+### 011 — User-Defined Display Units via Sheets
+
+Goal: allow ordinary sheet variables and includes to serve as custom display units.
+
+Acceptance criteria:
+
+- [x] A variable such as `ft = 0.3048 m` can be used in `d = 20 m | ft`.
+- [x] Explicit display labels preserve the requested unit text instead of reverting to built-in preferred unit symbols.
+- [x] Compound display unit labels such as `ft/s` are preserved.
+- [x] Arbitrary display-unit calculations such as `| 2 ft` are rejected for now.
+- [x] Included files can define display-unit variables.
+
 ## Current Focus
 
-Milestone 010 is implemented. Next focus should be selected from remaining backlog, such as addressing the Qt cursor warning, improving manual examples, or starting a future packaging/binary distribution milestone.
+Milestone 011 is implemented. Next focus should be selected from remaining backlog, such as addressing the Qt cursor warning, improving manual examples, adding more unit definitions/examples, or starting a future packaging/binary distribution milestone.

@@ -82,7 +82,7 @@ def _evaluate_source(
                     value = _eval_expr(stmt.expr, env)
                     env.values[stmt.name] = value
                     if stmt.show_value or _show_all_values(eval_metadata):
-                        value_text = _format_display(value, stmt.display, env)
+                        value_text = _format_display(value, stmt.display, _display_label(line), env)
                 elif isinstance(stmt, FunctionStmt):
                     env.functions[stmt.name] = UserFunction(stmt.params, stmt.expr)
                     if stmt.show_value:
@@ -90,7 +90,7 @@ def _evaluate_source(
                 elif isinstance(stmt, ExpressionStmt):
                     value = _eval_expr(stmt.expr, env)
                     if stmt.show_value or _show_all_values(eval_metadata):
-                        value_text = _format_display(value, stmt.display, env)
+                        value_text = _format_display(value, stmt.display, _display_label(line), env)
             except EvalError as exc:
                 diagnostics.append(Diagnostic(str(exc)))
         rows.append(RenderedRow(line_number, formula, value_text, tuple(diagnostics)))
@@ -158,17 +158,42 @@ def _top_level_pipe_index(text: str) -> int | None:
     return None
 
 
-def _format_display(value: Value, display: Expr | None, env: Environment) -> str:
+def _display_label(line: str) -> str | None:
+    pipe_index = _top_level_pipe_index(line.rstrip())
+    if pipe_index is None:
+        return None
+    label = line[pipe_index + 1 :].strip()
+    if not label:
+        return None
+    return "".join(label.split())
+
+
+def _format_display(value: Value, display: Expr | None, display_label: str | None, env: Environment) -> str:
     display_unit = None
     if display is not None:
+        _validate_display_unit_expr(display)
         unit = _eval_expr(display, env)
         if not isinstance(unit, Scalar):
             raise EvalError("display unit must be scalar")
         display_unit = unit
     try:
-        return format_value(value, display_unit)
+        return format_value(value, display_unit, display_label)
     except ValueError as exc:
         raise EvalError(str(exc)) from exc
+
+
+def _validate_display_unit_expr(expr: Expr) -> None:
+    if isinstance(expr, NameExpr):
+        return
+    if isinstance(expr, BinaryExpr):
+        if expr.op in ("*", "/"):
+            _validate_display_unit_expr(expr.left)
+            _validate_display_unit_expr(expr.right)
+            return
+        if expr.op == "^" and isinstance(expr.right, NumberExpr) and expr.right.value.is_integer():
+            _validate_display_unit_expr(expr.left)
+            return
+    raise EvalError("display unit must be a unit-name expression")
 
 
 def _logical_lines(source: str) -> list[str]:
@@ -402,8 +427,8 @@ def _require_same_dimension(left: Scalar, right: Scalar) -> None:
         raise EvalError("dimensions are incompatible")
 
 
-def _combine_dim(left: tuple[int, ...], right: tuple[int, ...], sign: int) -> tuple[int, int, int, int]:
-    return tuple(a + sign * b for a, b in zip(left, right, strict=True))  # type: ignore[return-value]
+def _combine_dim(left: tuple[int, ...], right: tuple[int, ...], sign: int) -> tuple[int, ...]:
+    return tuple(a + sign * b for a, b in zip(left, right, strict=True))
 
 
 _BUILTINS: dict[str, Callable[[tuple[Value, ...]], Value]] = {

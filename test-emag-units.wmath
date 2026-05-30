@@ -1,0 +1,52 @@
+# m  = m                         # Length -- meter
+# kg = kg                        # Mass -- kilogram
+# s  = s                         # Time -- second
+# A  = A                         # Electric current -- ampere
+
+N   = kg m / s^2                # Force -- newton
+
+J   = N m                       # Energy, work -- joule
+                                # = kg m^2 / s^2
+
+W   = J / s                     # Power -- watt
+                                # = kg m^2 / s^3
+
+C   = A s                       # Electric charge -- coulomb
+
+V   = W / A                     # Voltage -- volt
+                                # = kg m^2 / (A s^3)
+
+ohm = V / A                     # Resistance -- ohm
+                                # = kg m^2 / (A^2 s^3)
+
+S   = 1 / ohm                   # Conductance -- siemens
+                                # = A^2 s^3 / (kg m^2)
+
+F   = C / V                     # Capacitance -- farad
+                                # = A^2 s^4 / (kg m^2)
+
+Wb  = V s                       # Magnetic flux -- weber
+                                # = kg m^2 / (A s^2)
+
+T   = Wb / m^2                  # Magnetic flux density -- tesla
+                                # = kg / (A s^2)
+
+H   = Wb / A                    # Inductance -- henry
+                                # = kg m^2 / (A^2 s^2)
+
+eps0 = F / m                    # Permittivity -- F/m
+                                # = A^2 s^4 / (kg m^3)
+
+mu0  = H / m                    # Permeability -- H/m
+                                # = kg m / (A^2 s^2)
+
+rho_e = C / m^3                 # Charge density -- C/m^3
+                                # = A s / m^3
+
+J_e   = A / m^2                 # Current density -- A/m^2
+
+sigma = S / m                   # Conductivity -- S/m
+                                # = A^2 s^3 / (kg m^3)
+
+rho   = ohm m                   # Resistivity -- ohm m
+                                # = kg m^3 / (A^2 s^3)

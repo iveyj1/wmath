@@ -1,0 +1,53 @@
+# wmath manual smoke test sheet
+# Open this file with python -m wmath.
+
+include "test_defs.wmath"
+include "test-emag-units.wmath"
+
+# Scalars and display marker behavior
+a = 2 |
+b = 3 |
+a + b |
+hidden = a * b
+
+# Functions
+double(4) |
+sqrt(9) |
+
+# Built-in units and explicit unit display
+length = 2 m
+force = 10 N
+work = force * length | J
+charge = 2 A * s |
+resistance = 10 V / A |
+angle = 2 | rad
+dose = 5 J / kg | Sv
+
+# Additional SI base units
+current = 2 A |
+amount = 3 mol |
+brightness = 4 cd |
+
+# User-defined display units imported from test_defs.wmath
+distance = 20 m | ft
+speed = 10 m / s | ft / minute
+push = 100 N | lbf
+
+# Vectors
+v = [1, 2, 3]
+v[2] |
+v[2:] |
+append(v, [4]) |
+length(v) |
+dot(v, v) |
+
+# Matrix literal and known matrix arithmetic limitation
+matrix = [[1, 2], [3, 4]] |
+matrix + matrix |
+
+# Diagnostics smoke tests
+missing + 1 |
+distance | s
+
+1 A s | C
+

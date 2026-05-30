@@ -31,6 +31,16 @@ def test_nested_include_resolves_relative_to_including_file(tmp_path: Path) -> N
     assert output.warnings == ()
 
 
+def test_include_can_define_display_units(tmp_path: Path) -> None:
+    main = tmp_path / "main.wmath"
+    defs = tmp_path / "units.wmath"
+    defs.write_text("ft = 0.3048 m\n", encoding="utf-8")
+
+    output = evaluate(EvalInput('include "units.wmath"\nd = 20 m | ft', file_path=main))
+
+    assert output.rows[1].value == "65.6167979003 ft"
+
+
 def test_missing_include_produces_warning(tmp_path: Path) -> None:
     output = evaluate(EvalInput('include "missing.wmath"\n1 |', file_path=tmp_path / "main.wmath"))
 

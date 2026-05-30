@@ -35,7 +35,7 @@ Milestones 001 through 009 are implemented. The app currently provides a PySide6
 - scalar numeric evaluation with persistent top-to-bottom environment
 - user-defined scalar functions
 - scalar built-ins: `sin`, `cos`, `tan`, `sqrt`, `log`, `exp`
-- unit-aware scalar arithmetic over `m`, `kg`, `s`, `K`, `N`, `J`, `Pa`, `W`, `Hz`
+- unit-aware scalar arithmetic over SI base units `m`, `kg`, `s`, `A`, `K`, `mol`, `cd`, plus the 22 named SI derived units
 - default conventional unit display and explicit `| unit` display
 - vector literals, scalar/vector ops, elementwise vector ops, indexing, slicing
 - vector helpers: `append`, `length`, `dot`
@@ -88,8 +88,16 @@ double(x) = x * 2
 double(4) |
 sqrt(9) |
 length = 2 m
+current = 2 A
+amount = 3 mol
+brightness = 4 cd
 force = 10 N
 work = force * length | J
+charge = 2 A * s |
+resistance = 10 V / A |
+angle = 2 | rad
+ft = 0.3048 m
+distance = 20 m | ft
 v = [1, 2, 3]
 v[2] |
 v[2:] |
@@ -120,6 +128,19 @@ work = force * d | J
 ```
 
 Legacy display suffix syntax is intentionally not required. Explicit display units such as `| J` convert/display compatible values. Incompatible display units produce row diagnostics.
+
+Built-in SI named derived units are available as unit names: `rad`, `sr`, `Hz`, `N`, `Pa`, `J`, `W`, `C`, `V`, `F`, `ohm`, `S`, `Wb`, `T`, `H`, `degC`, `lm`, `lx`, `Bq`, `Gy`, `Sv`, and `kat`. ASCII identifiers are used for `ohm` and `degC` because `Ω` and `°C` are not valid identifiers in the current language. Some SI named units share dimensions, such as `Hz`/`Bq`, `Gy`/`Sv`, `cd`/`lm`, and dimensionless `rad`/`sr`; use explicit display syntax such as `| Sv` or `| rad` when you need the non-default label.
+
+Unit-like variables can also be defined directly in sheets or includes and used as explicit display units:
+
+```text
+ft = 0.3048 m
+inch = ft / 12
+mi = 5280 ft
+distance = 20 m | ft
+```
+
+The value is converted using the variable definition, and the requested display label is preserved. For example, `distance = 20 m | ft` renders in `ft`, not the default built-in `m` label. Display unit expressions are deliberately limited to unit-name arithmetic with names, `*`, `/`, and integer powers. Arbitrary calculations such as `| 2 ft` are rejected.
 
 ## Includes
 

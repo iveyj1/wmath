@@ -6,7 +6,7 @@
 
 ## Immediate
 
-Milestone 010 complete. Next immediate focus is not selected.
+Milestone 011 complete. Next immediate focus is not selected.
 
 - [x] Add README or expand docs with Linux venv install/run summary.
 - [x] Add Windows venv install/run summary.
@@ -21,13 +21,17 @@ Milestone 010 complete. Next immediate focus is not selected.
 
 ## Core Backlog
 
+- [x] User-defined display units via sheet variables and includes.
+- [x] Preserve explicit display unit labels, including compound unit expressions.
+- [x] Reject arbitrary calculations in display unit expressions for now.
 - [x] Define `EvalInput`, `EvalOutput`, `RenderedRow`, and `Diagnostic` model classes.
 - [x] Implement lexer.
 - [x] Implement parser.
 - [x] Add Qt-free plain-text row rendering helpers.
 - [x] Implement scalar numeric evaluator environment.
 - [x] Implement scalar value model with unit dimensions.
-- [x] Implement unit dimension model.
+- [x] Implement unit dimension model with all seven SI base units.
+- [x] Add all 22 named SI derived units as built-ins.
 - [x] Implement formatter.
 - [x] Implement include resolver.
 - [x] Add pytest coverage for parser and scalar evaluator behavior.
