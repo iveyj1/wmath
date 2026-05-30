@@ -50,6 +50,10 @@ Milestone 008 implements include evaluation in `evaluator.py`. Includes resolve 
 
 Milestone 009 polishes the UI acceptance path: status text reports line count, evaluation state, and dirty/save state; dirty state compares current editor text to the last new/open/save baseline so undoing back to saved text clears the marker; warning text is word-wrapped and multi-line; rendered value placement uses sidecar `valueColumnPercent` against the current rendered pane width; the header exposes `showValuesMode` and `valueColumnPercent` controls; a New action creates an untitled sheet; rendered formulas omit display suffixes; and `spec.md` section 10 acceptance criteria have been reviewed against current behavior.
 
+Milestone 012 adds Qt-free plot artifacts and a `plot(x, y, min_x, max_x, min_y, max_y)` built-in. The evaluator validates vectors, bounds, dimensions, and ranges, returns structured `PlotArtifact` data on rendered rows, and also provides a textual summary for the existing rendered pane.
+
+Milestone 013 replaces the single rendered `QLabel` with a scrollable mixed-content widget tree: per-row selectable text labels plus `wmath.app.plot_widget.PlotWidget` instances for plot artifacts. `PlotWidget` is a lightweight PySide6/QPainter widget with axes, line segments, point markers, and min/max labels; it adds no plotting dependency.
+
 The core should expose a plain Python API:
 
 ```python
@@ -66,6 +70,8 @@ class EvalOutput:
 ```
 
 The UI should consume `EvalOutput` and render rows without knowing parser internals. `wmath.app.main_window.MainWindow` currently follows this by calling the evaluator and rendering returned rows via core text-formatting helpers. The rendered pane is implemented as a selectable `QLabel` inside `QScrollArea`, not a second text editor, while still supporting basic proportional scroll sync. A Qt `QTextCursor::setPosition` warning can still appear from editor end-of-line/end-of-file interactions and is tracked as a prototype issue.
+
+Graphing preserves this boundary. The core returns structured plot artifacts for `plot(x, y, min_x, max_x, min_y, max_y)` after validating vectors, dimensions, and bounds. Textual summaries remain testable without Qt, while the PySide UI can additionally render artifacts as lightweight Qt-painted widgets in the mixed-content rendered pane. Milestone 014 should extend this without breaking compatibility by accepting grouped range vectors and an optional dimensionless size vector, storing requested size on the Qt-free artifact for the UI to honor when practical.
 
 ## Platform and Packaging Policy
 

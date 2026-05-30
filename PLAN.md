@@ -153,6 +153,47 @@ Acceptance criteria:
 - [x] Arbitrary display-unit calculations such as `| 2 ft` are rejected for now.
 - [x] Included files can define display-unit variables.
 
+### 012 — Plot Built-in and Textual Render Artifact
+
+Goal: introduce graphing semantics without adding UI drawing complexity or Qt dependencies to the core.
+
+Acceptance criteria:
+
+- [x] Core model can represent a plot artifact separately from plain value text.
+- [x] `plot(x, y, min_x, max_x, min_y, max_y)` validates vector lengths, scalar bounds, axis dimensions, and increasing ranges.
+- [x] Plot evaluation produces deterministic structured points and axis metadata.
+- [x] Initial rendered output is textual or ASCII and testable headlessly.
+- [x] Unit-bearing axes are supported when bounds match vector dimensions.
+- [x] Diagnostics cover wrong argument count/type, vector length mismatch, too few points, incompatible bounds, and non-increasing bounds.
+- [x] Docs include examples for plain and unit-bearing plots.
+
+### 013 — Qt Plot Rendering
+
+Goal: render plot artifacts visually in the right pane after core plot semantics are stable.
+
+Acceptance criteria:
+
+- [x] Rendered pane can display mixed row content: text rows and plot rows/widgets.
+- [x] A minimal Qt plot widget draws axes, line/points, and min/max labels.
+- [x] Scroll synchronization and active-row indication remain usable with plot rows.
+- [x] No heavy plotting dependency such as matplotlib is required.
+
+### 014 — Plot Range and Size Arguments
+
+Goal: make plot declarations easier to read and give users basic control over plot size.
+
+Acceptance criteria:
+
+- [x] Existing six-argument form remains supported: `plot(x, y, min_x, max_x, min_y, max_y)`.
+- [x] Range-vector form is supported: `plot(x, y, [min_x, max_x], [min_y, max_y])`.
+- [x] Optional size-vector form is supported: `plot(x, y, [min_x, max_x], [min_y, max_y], [width, height])`.
+- [x] Range vectors must contain exactly two scalar values with dimensions compatible with the relevant axis.
+- [x] Size vector must contain exactly two dimensionless scalar values.
+- [x] Core `PlotArtifact` records requested size without depending on Qt.
+- [x] Qt plot widget honors requested height when practical and treats requested width as a maximum within the rendered pane.
+- [x] Diagnostics cover malformed ranges, malformed size, incompatible bounds, and non-increasing bounds.
+- [x] Docs and manual test sheet include enhanced plot examples.
+
 ## Current Focus
 
-Milestone 011 is implemented. Next focus should be selected from remaining backlog, such as addressing the Qt cursor warning, improving manual examples, adding more unit definitions/examples, or starting a future packaging/binary distribution milestone.
+Milestone 014 is implemented. Next implementation focus should be selected from remaining backlog.

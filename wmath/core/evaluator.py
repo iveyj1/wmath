@@ -22,7 +22,7 @@ from wmath.core.ast import (
     SliceExpr,
     UnaryExpr,
 )
-from wmath.core.models import Diagnostic, EvalInput, EvalOutput, RenderedRow
+from wmath.core.models import Diagnostic, EvalInput, EvalOutput, PlotArtifact, RenderedRow
 from wmath.core.parser import parse_line
 from wmath.core.values import DIMENSIONLESS, Matrix, Scalar, Value, Vector, format_value, unit_value
 
@@ -68,13 +68,14 @@ def _evaluate_source(
         stmt = parsed.statement
         formula = _formula_text(line, stmt) if stmt is not None else (line.rstrip() or None)
         value_text: str | None = None
+        artifact: PlotArtifact | None = None
         if stmt is None:
-            rows.append(RenderedRow(line_number, formula, None, tuple(diagnostics)))
+            rows.append(RenderedRow(line_number, formula, None, None, tuple(diagnostics)))
             continue
         if isinstance(stmt, IncludeStmt):
             include_warnings = _evaluate_include(stmt, env, file_path, include_stack, line_number)
             warnings.extend(include_warnings)
-            rows.append(RenderedRow(line_number, None, None, include_warnings))
+            rows.append(RenderedRow(line_number, None, None, None, include_warnings))
             continue
         if not diagnostics:
             try:
@@ -82,7 +83,7 @@ def _evaluate_source(
                     value = _eval_expr(stmt.expr, env)
                     env.values[stmt.name] = value
                     if stmt.show_value or _show_all_values(eval_metadata):
-                        value_text = _format_display(value, stmt.display, _display_label(line), env)
+                        value_text, artifact = _format_display(value, stmt.display, _display_label(line), env)
                 elif isinstance(stmt, FunctionStmt):
                     env.functions[stmt.name] = UserFunction(stmt.params, stmt.expr)
                     if stmt.show_value:
@@ -90,10 +91,10 @@ def _evaluate_source(
                 elif isinstance(stmt, ExpressionStmt):
                     value = _eval_expr(stmt.expr, env)
                     if stmt.show_value or _show_all_values(eval_metadata):
-                        value_text = _format_display(value, stmt.display, _display_label(line), env)
+                        value_text, artifact = _format_display(value, stmt.display, _display_label(line), env)
             except EvalError as exc:
                 diagnostics.append(Diagnostic(str(exc)))
-        rows.append(RenderedRow(line_number, formula, value_text, tuple(diagnostics)))
+        rows.append(RenderedRow(line_number, formula, value_text, artifact, tuple(diagnostics)))
     return EvalOutput(rows=tuple(rows), warnings=tuple(warnings))
 
 
@@ -168,16 +169,23 @@ def _display_label(line: str) -> str | None:
     return "".join(label.split())
 
 
-def _format_display(value: Value, display: Expr | None, display_label: str | None, env: Environment) -> str:
+def _format_display(
+    value: Value,
+    display: Expr | None,
+    display_label: str | None,
+    env: Environment,
+) -> tuple[str, PlotArtifact | None]:
     display_unit = None
     if display is not None:
+        if isinstance(value, PlotArtifact):
+            raise EvalError("plots do not support display unit suffixes yet")
         _validate_display_unit_expr(display)
         unit = _eval_expr(display, env)
         if not isinstance(unit, Scalar):
             raise EvalError("display unit must be scalar")
         display_unit = unit
     try:
-        return format_value(value, display_unit, display_label)
+        return format_value(value, display_unit, display_label), value if isinstance(value, PlotArtifact) else None
     except ValueError as exc:
         raise EvalError(str(exc)) from exc
 
@@ -287,6 +295,8 @@ def _eval_array(expr: ArrayExpr, env: Environment) -> Value:
 
 
 def _eval_binary(left: Value, op: str, right: Value) -> Value:
+    if isinstance(left, PlotArtifact) or isinstance(right, PlotArtifact):
+        raise EvalError("plot values do not support arithmetic")
     if isinstance(left, Matrix) or isinstance(right, Matrix):
         raise EvalError("matrix arithmetic is not implemented yet")
     if isinstance(left, Vector) or isinstance(right, Vector):
@@ -408,6 +418,93 @@ def _builtin_dot(args: tuple[Value, ...]) -> Scalar:
     return Scalar(sum(item.value for item in products), products[0].dimension if products else DIMENSIONLESS)
 
 
+def _builtin_plot(args: tuple[Value, ...]) -> PlotArtifact:
+    if len(args) not in (4, 5, 6):
+        raise EvalError("plot expects four, five, or six arguments")
+    x_values, y_values = _plot_vectors(args)
+    x_dimension = x_values.items[0].dimension
+    y_dimension = y_values.items[0].dimension
+    min_x, max_x, min_y, max_y, requested_size = _plot_bounds_and_size(args, x_dimension, y_dimension)
+    if min_x.value >= max_x.value:
+        raise EvalError("plot x bounds must be increasing")
+    if min_y.value >= max_y.value:
+        raise EvalError("plot y bounds must be increasing")
+    return PlotArtifact(
+        points=tuple((x.value, y.value) for x, y in zip(x_values.items, y_values.items, strict=True)),
+        x_range=(min_x.value, max_x.value),
+        y_range=(min_y.value, max_y.value),
+        x_dimension=x_dimension,
+        y_dimension=y_dimension,
+        requested_size=requested_size,
+    )
+
+
+def _plot_vectors(args: tuple[Value, ...]) -> tuple[Vector, Vector]:
+    x_values, y_values = args[0], args[1]
+    if not isinstance(x_values, Vector) or not isinstance(y_values, Vector):
+        raise EvalError("plot expects x and y vectors")
+    if len(x_values.items) != len(y_values.items):
+        raise EvalError("plot vectors must have the same length")
+    if len(x_values.items) < 2:
+        raise EvalError("plot requires at least two points")
+    return x_values, y_values
+
+
+def _plot_bounds_and_size(
+    args: tuple[Value, ...],
+    x_dimension: tuple[int, ...],
+    y_dimension: tuple[int, ...],
+) -> tuple[Scalar, Scalar, Scalar, Scalar, tuple[int, int] | None]:
+    if len(args) == 6:
+        min_x, max_x, min_y, max_y = args[2], args[3], args[4], args[5]
+        if not all(isinstance(bound, Scalar) for bound in (min_x, max_x, min_y, max_y)):
+            raise EvalError("plot bounds must be scalars")
+        assert isinstance(min_x, Scalar)
+        assert isinstance(max_x, Scalar)
+        assert isinstance(min_y, Scalar)
+        assert isinstance(max_y, Scalar)
+        _require_plot_bounds_dimensions(min_x, max_x, min_y, max_y, x_dimension, y_dimension)
+        return min_x, max_x, min_y, max_y, None
+
+    x_range, y_range = args[2], args[3]
+    min_x, max_x = _plot_range(x_range, "x")
+    min_y, max_y = _plot_range(y_range, "y")
+    _require_plot_bounds_dimensions(min_x, max_x, min_y, max_y, x_dimension, y_dimension)
+    requested_size = _plot_size(args[4]) if len(args) == 5 else None
+    return min_x, max_x, min_y, max_y, requested_size
+
+
+def _plot_range(value: Value, axis: str) -> tuple[Scalar, Scalar]:
+    if not isinstance(value, Vector) or len(value.items) != 2:
+        raise EvalError(f"plot {axis} range must be a two-item vector")
+    return value.items[0], value.items[1]
+
+
+def _plot_size(value: Value) -> tuple[int, int]:
+    if not isinstance(value, Vector) or len(value.items) != 2:
+        raise EvalError("plot size must be a two-item vector")
+    width, height = value.items
+    if width.dimension != DIMENSIONLESS or height.dimension != DIMENSIONLESS:
+        raise EvalError("plot size values must be dimensionless")
+    if width.value <= 0 or height.value <= 0:
+        raise EvalError("plot size values must be positive")
+    return round(width.value), round(height.value)
+
+
+def _require_plot_bounds_dimensions(
+    min_x: Scalar,
+    max_x: Scalar,
+    min_y: Scalar,
+    max_y: Scalar,
+    x_dimension: tuple[int, ...],
+    y_dimension: tuple[int, ...],
+) -> None:
+    if min_x.dimension != x_dimension or max_x.dimension != x_dimension:
+        raise EvalError("plot x bounds are dimensionally incompatible")
+    if min_y.dimension != y_dimension or max_y.dimension != y_dimension:
+        raise EvalError("plot y bounds are dimensionally incompatible")
+
+
 def _as_index(value: Value) -> int:
     if not isinstance(value, Scalar) or value.dimension != DIMENSIONLESS or not value.value.is_integer():
         raise EvalError("index must be a dimensionless integer")
@@ -441,4 +538,5 @@ _BUILTINS: dict[str, Callable[[tuple[Value, ...]], Value]] = {
     "append": _builtin_append,
     "length": _builtin_length,
     "dot": _builtin_dot,
+    "plot": _builtin_plot,
 }

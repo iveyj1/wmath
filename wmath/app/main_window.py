@@ -24,11 +24,12 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from wmath.app.plot_widget import PlotWidget
 from wmath.core import (
     EvalInput,
     EvalOutput,
     evaluate,
-    format_rendered_rows,
+    format_rendered_row,
     format_warning_bar,
 )
 from wmath.storage import (
@@ -151,15 +152,16 @@ class MainWindow(QMainWindow):
         self.editor.setPlainText("length = 2 m\nwidth = 3 m\narea = length * width |")
         self.editor.setFont(self._mono_font())
 
-        self.rendered_label = QLabel("Rendered rows will appear here.", self.splitter)
-        self.rendered_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
-        self.rendered_label.setFont(self._mono_font())
-        self.rendered_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
-        self.rendered_label.setTextFormat(Qt.TextFormat.PlainText)
+        self.rendered_content = QWidget(self.splitter)
+        self.rendered_content.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Expanding)
+        self.rendered_layout = QVBoxLayout(self.rendered_content)
+        self.rendered_layout.setContentsMargins(0, 0, 0, 0)
+        self.rendered_layout.setSpacing(2)
 
         self.rendered_scroll = QScrollArea(self.splitter)
         self.rendered_scroll.setWidgetResizable(True)
-        self.rendered_scroll.setWidget(self.rendered_label)
+        self.rendered_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.rendered_scroll.setWidget(self.rendered_content)
 
         self.splitter.addWidget(self.editor)
         self.splitter.addWidget(self.rendered_scroll)
@@ -353,19 +355,40 @@ class MainWindow(QMainWindow):
 
     def _render_output(self, output: EvalOutput) -> None:
         scroll_value = self.rendered_scroll.verticalScrollBar().value()
-        self.rendered_label.setText(
-            format_rendered_rows(
-                output,
-                active_line=self._active_line + 1,
-                value_column_percent=self._metadata.valueColumnPercent,
-                line_width=self._rendered_line_width(),
+        self._clear_rendered_layout()
+        line_width = self._rendered_line_width()
+        for row in output.rows:
+            row_label = QLabel(self.rendered_content)
+            row_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
+            row_label.setMinimumWidth(0)
+            row_label.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
+            row_label.setFont(self._mono_font())
+            row_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+            row_label.setTextFormat(Qt.TextFormat.PlainText)
+            row_label.setText(
+                format_rendered_row(
+                    row,
+                    active_line=self._active_line + 1,
+                    value_column_percent=self._metadata.valueColumnPercent,
+                    line_width=line_width,
+                )
             )
-        )
+            self.rendered_layout.addWidget(row_label)
+            if row.artifact is not None:
+                self.rendered_layout.addWidget(PlotWidget(row.artifact, self.rendered_content))
+        self.rendered_layout.addStretch(1)
         self.rendered_scroll.verticalScrollBar().setValue(scroll_value)
         self._update_warning_bar(output)
 
+    def _clear_rendered_layout(self) -> None:
+        while self.rendered_layout.count():
+            item = self.rendered_layout.takeAt(0)
+            widget = item.widget()
+            if widget is not None:
+                widget.deleteLater()
+
     def _rendered_line_width(self) -> int:
-        char_width = max(1, self.rendered_label.fontMetrics().horizontalAdvance("0"))
+        char_width = max(1, self.editor.fontMetrics().horizontalAdvance("0"))
         viewport_width = max(1, self.rendered_scroll.viewport().width() - 12)
         return max(40, viewport_width // char_width)
 

@@ -20,6 +20,7 @@ It reflects current intended behavior and intentionally drops legacy syntax supp
 - Top-to-bottom row evaluation with persistent environment.
 - Scalars, vectors, and matrix literals (matrix arithmetic explicitly deferred).
 - User-defined functions and selected built-in functions.
+- Basic plot declarations over vectors as structured/textual render artifacts.
 - Unit-aware arithmetic over SI base dimensions `(m, kg, s, A, K, mol, cd)`.
 - Save/load, MRU display, include support, undo/redo.
 
@@ -153,12 +154,14 @@ Built-ins required:
 
 - Scalar math: `sin`, `cos`, `tan`, `sqrt`, `log`, `exp`
 - Vector helpers: `append(v1, v2)`, `length(v)`, `dot(v1, v2)`
+- Plot helper: `plot(x, y, min_x, max_x, min_y, max_y)`
 
 Built-in constraints:
 
 - `sin/cos/tan/log/exp`: dimensionless scalar input.
 - `sqrt`: scalar, non-negative value, even unit exponents.
 - `dot`: vectors only, same length, term units must be compatible for sum.
+- `plot`: `x` and `y` must be scalar vectors of the same length with at least two points; bounds must be scalars, dimensionally compatible with the relevant axis, and increasing.
 
 ## 5.4 Vector Operations (Required)
 
@@ -171,7 +174,54 @@ Built-in constraints:
   - defaults: `[:b]` starts at 1, `[a:]` ends at length.
   - bounds errors are reported.
 
-## 5.5 Matrix Groundwork (Required)
+## 5.5 Plot Values
+
+`plot` creates a plot artifact from two vectors. The baseline positional form is:
+
+```text
+plot(x, y, min_x, max_x, min_y, max_y)
+```
+
+Planned enhanced forms group ranges and optionally request size:
+
+```text
+plot(x, y, [min_x, max_x], [min_y, max_y])
+plot(x, y, [min_x, max_x], [min_y, max_y], [width, height])
+```
+
+Rules:
+
+- `x` and `y` must be vectors.
+- Vectors must have identical length and contain at least two points.
+- All `x` values already obey vector homogeneity and therefore share one dimension; same for `y`.
+- In the six-argument form, `min_x`, `max_x`, `min_y`, and `max_y` must be scalar values dimensionally compatible with the relevant axis.
+- In enhanced forms, x/y range arguments must be vectors of exactly two scalar values, dimensionally compatible with the relevant axis.
+- Axis bounds must be increasing after conversion to each axis' native scalar values.
+- Optional size must be a dimensionless two-item vector `[width, height]`.
+- Plot size is a UI request, not a core drawing command: height should be honored when practical, while width acts as a maximum and must not force horizontal overflow.
+- Core evaluation returns structured plot data, not UI pixels, so the core remains independent from Qt.
+- Text rendering includes a summary, e.g. `plot: 5 points, x 0..4, y 0..16`.
+- `| unit` display suffixes are not supported directly on plot rows yet; put compatible units on vector data and bounds instead.
+- The PySide prototype renders plot artifacts as lightweight Qt-painted widgets in the rendered pane.
+
+Example:
+
+```text
+x = [0, 1, 2, 3, 4]
+y = [0, 1, 4, 9, 16]
+plot(x, y, 0, 4, 0, 16) |
+plot(x, y, [0, 4], [0, 16], [500, 240]) |
+```
+
+With units:
+
+```text
+t = [0, 1, 2, 3] s
+d = [0, 4.9, 19.6, 44.1] m
+plot(t, d, 0 s, 3 s, 0 m, 50 m) |
+```
+
+## 5.6 Matrix Groundwork (Required)
 
 - Parse/evaluate nested array literals as matrix values.
 - Validate consistent row widths and compatible element units.
@@ -229,6 +279,7 @@ Metadata keys required:
 - Render row may contain:
   - normalized formula text without display suffix
   - optional value/unit
+  - optional structured artifact such as a plot
   - optional diagnostics
 - Value column placement driven by `valueColumnPercent`.
 
@@ -249,7 +300,8 @@ A clean-room implementation is acceptable if all are true:
 4. Vectors support elementwise ops, indexing, slicing, append, length, dot.
 5. Matrix literals parse/evaluate; matrix arithmetic reports not implemented.
 6. Unit checking and conversions follow dimension rules above.
-7. Save/load + metadata + dirty prompts + MRU + shortcuts behave as specified.
+7. Basic `plot(x, y, min_x, max_x, min_y, max_y)` validation and textual artifact rendering works.
+8. Save/load + metadata + dirty prompts + MRU + shortcuts behave as specified.
 
 ## 11. Technology Guidance
 

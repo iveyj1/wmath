@@ -9,6 +9,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Literal
 
+Dimension = tuple[int, int, int, int, int, int, int]
+
 DiagnosticSeverity = Literal["info", "warning", "error"]
 
 
@@ -21,12 +23,28 @@ class Diagnostic:
 
 
 @dataclass(frozen=True)
+class PlotArtifact:
+    """Qt-free plot data produced by core evaluation."""
+
+    points: tuple[tuple[float, float], ...]
+    x_range: tuple[float, float]
+    y_range: tuple[float, float]
+    x_dimension: Dimension
+    y_dimension: Dimension
+    requested_size: tuple[int, int] | None = None
+
+
+RenderArtifact = PlotArtifact
+
+
+@dataclass(frozen=True)
 class RenderedRow:
     """Renderable output for one source row."""
 
     line_number: int
     formula: str | None = None
     value: str | None = None
+    artifact: RenderArtifact | None = None
     diagnostics: tuple[Diagnostic, ...] = ()
 
 

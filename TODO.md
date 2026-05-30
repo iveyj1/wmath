@@ -6,7 +6,7 @@
 
 ## Immediate
 
-Milestone 011 complete. Next immediate focus is not selected.
+Milestone 014 complete. Next immediate focus is not selected.
 
 - [x] Add README or expand docs with Linux venv install/run summary.
 - [x] Add Windows venv install/run summary.
@@ -18,6 +18,22 @@ Milestone 011 complete. Next immediate focus is not selected.
 - [x] Review dependency pins and distribution notes for Linux and Windows source installs.
 - [x] Smoke-test Windows source run on a real Windows system.
 - [x] Add GitHub Actions CI for pytest, compileall, and ruff.
+
+## Plotting Backlog
+
+- [x] Add a core plot artifact model separate from plain string values.
+- [x] Implement `plot(x, y, min_x, max_x, min_y, max_y)` built-in.
+- [x] Validate plot argument count, vector types, equal vector length, minimum two points, scalar bounds, compatible axis dimensions, and increasing bounds.
+- [x] Add headless tests for plain numeric plots and unit-bearing plots.
+- [x] Add textual or ASCII plot rendering for the first graphing milestone.
+- [x] Refactor rendered pane for mixed text/plot widgets.
+- [x] Implement lightweight Qt plot widget with no matplotlib dependency.
+- [x] Keep existing six-argument plot form compatible.
+- [x] Add range-vector plot form: `plot(x, y, [min_x, max_x], [min_y, max_y])`.
+- [x] Add optional size-vector plot form: `plot(x, y, [min_x, max_x], [min_y, max_y], [width, height])`.
+- [x] Store requested plot size on the Qt-free core plot artifact.
+- [x] Honor requested plot height in the Qt plot widget and treat requested width as a maximum within the rendered pane.
+- [x] Add diagnostics/tests for malformed range and size vectors.
 
 ## Core Backlog
 
@@ -38,6 +54,7 @@ Milestone 011 complete. Next immediate focus is not selected.
 
 ## UI Backlog
 
+- [x] Support mixed rendered row content for plot widgets.
 - [x] New file action.
 - [x] Open file dialog.
 - [x] Save.
@@ -60,6 +77,8 @@ Milestone 011 complete. Next immediate focus is not selected.
 
 ## Documentation Backlog
 
+- [x] Document plot syntax and limitations when implemented.
+- [x] Document enhanced plot range/size forms when implemented.
 - [x] Expand `docs/user.md` with current syntax examples.
 - [x] Document Milestone 001 launch and architecture notes in user/dev docs.
 - [x] Add Linux/Windows source-run notes for venv approach, using `python -m pip` to avoid stale generated pip script paths.

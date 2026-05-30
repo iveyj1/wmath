@@ -39,6 +39,7 @@ Milestones 001 through 009 are implemented. The app currently provides a PySide6
 - default conventional unit display and explicit `| unit` display
 - vector literals, scalar/vector ops, elementwise vector ops, indexing, slicing
 - vector helpers: `append`, `length`, `dot`
+- textual plot artifacts via `plot(x, y, min_x, max_x, min_y, max_y)`
 - matrix literal validation and display
 - include evaluation as prelude context
 - include missing-file and cycle warnings
@@ -102,6 +103,7 @@ v = [1, 2, 3]
 v[2] |
 v[2:] |
 dot(v, v) |
+plot(v, [1, 4, 9], 1, 3, 0, 10) |
 m = [[1, 2], [3, 4]] |
 include "defs.wmath"
 ```
@@ -141,6 +143,39 @@ distance = 20 m | ft
 ```
 
 The value is converted using the variable definition, and the requested display label is preserved. For example, `distance = 20 m | ft` renders in `ft`, not the default built-in `m` label. Display unit expressions are deliberately limited to unit-name arithmetic with names, `*`, `/`, and integer powers. Arbitrary calculations such as `| 2 ft` are rejected.
+
+## Plotting
+
+Basic plot artifacts are implemented with:
+
+```text
+x = [0, 1, 2, 3, 4]
+y = [0, 1, 4, 9, 16]
+plot(x, y, 0, 4, 0, 16) |
+```
+
+Enhanced forms group ranges and allow optional size:
+
+```text
+plot(x, y, [0, 4], [0, 16]) |
+plot(x, y, [0, 4], [0, 16], [500, 240]) |
+```
+
+For unit-bearing vectors, axis bounds should use compatible units:
+
+```text
+t = [0, 1, 2, 3] s
+d = [0, 4.9, 19.6, 44.1] m
+plot(t, d, 0 s, 3 s, 0 m, 50 m) |
+```
+
+The rendered pane shows a textual summary and a simple drawn plot with axes, point markers, a connected line, and min/max labels. The textual summary looks like:
+
+```text
+plot: 5 points, x 0..4, y 0..16
+```
+
+`| unit` display suffixes are not supported directly on plot rows yet; put compatible units on vector data and axis bounds instead. Optional plot size uses `[width, height]`; the current UI honors requested height when practical and treats requested width as a maximum so plots stay within the rendered pane.
 
 ## Includes
 
@@ -207,7 +242,7 @@ Currently wired in the prototype:
 python -m wmath
 ```
 
-Edit source lines and confirm the rendered pane updates. Move between lines and confirm the rendered pane marks the active source row with `▶`. Remove `|` from a row and confirm its value hides; enable `All values` and confirm values return. Change `Value %` and confirm the value column moves. Add a missing include such as `include "missing.wmath"` and confirm a warning appears in the warning bar and rendered row. Add an invalid row such as `missing + 1 |` and confirm status reports an error.
+Edit source lines and confirm the rendered pane updates. Move between lines and confirm the rendered pane marks the active source row with `▶`. Add `plot([0, 1, 2], [0, 1, 4], 0, 2, 0, 4) |` and confirm a simple plot appears. Remove `|` from a row and confirm its value hides; enable `All values` and confirm values return. Change `Value %` and confirm the value column moves. Add a missing include such as `include "missing.wmath"` and confirm a warning appears in the warning bar and rendered row. Add an invalid row such as `missing + 1 |` and confirm status reports an error.
 
 For storage behavior:
 
@@ -221,6 +256,7 @@ For storage behavior:
 ## Known Prototype Limitations
 
 - User-defined unit registries are not implemented.
+- Plotting is basic: drawn plots have fixed styling and no zoom/pan/hover interaction yet.
 - Matrix arithmetic is not implemented; matrix operations report `matrix arithmetic is not implemented yet`.
 - Source/venv install is the current packaging approach; binary packaging is deferred.
 - Windows source-run support has been smoke-tested; binary packaging is still deferred.

@@ -49,6 +49,16 @@ distance = 20 m | ft
 
 The value is converted and rendered with the requested label, e.g. `65.6167979003 ft`.
 
+## Plotting
+
+Vector plotting uses:
+
+```text
+plot(x, y, min_x, max_x, min_y, max_y) |
+```
+
+The current implementation produces core plot artifacts, textual summaries, and simple Qt-rendered plot widgets in the desktop UI. Grouped ranges and optional size are supported, e.g. `plot(x, y, [0, 4], [0, 16], [500, 240]) |`.
+
 ## Tests
 
 ```bash

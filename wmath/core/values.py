@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from math import isclose
 
-Dimension = tuple[int, int, int, int, int, int, int]
+from wmath.core.models import Dimension, PlotArtifact
 DIMENSIONLESS: Dimension = (0, 0, 0, 0, 0, 0, 0)
 
 
@@ -25,7 +25,7 @@ class Matrix:
     rows: tuple[Vector, ...]
 
 
-Value = Scalar | Vector | Matrix
+Value = Scalar | Vector | Matrix | PlotArtifact
 
 
 @dataclass(frozen=True)
@@ -112,11 +112,13 @@ def format_value(
         return format_scalar(value, display_unit, display_symbol)
     if isinstance(value, Vector):
         return "[" + ", ".join(format_scalar(item, display_unit, display_symbol) for item in value.items) + "]"
-    row_text = [
-        "[" + ", ".join(format_scalar(item, display_unit, display_symbol) for item in row.items) + "]"
-        for row in value.rows
-    ]
-    return "[" + ", ".join(row_text) + "]"
+    if isinstance(value, Matrix):
+        row_text = [
+            "[" + ", ".join(format_scalar(item, display_unit, display_symbol) for item in row.items) + "]"
+            for row in value.rows
+        ]
+        return "[" + ", ".join(row_text) + "]"
+    return format_plot(value)
 
 
 def format_scalar(
@@ -134,6 +136,16 @@ def format_scalar(
     elif value.dimension != DIMENSIONLESS:
         suffix = " " + _unit_symbol(value.dimension)
     return _format_number(number) + suffix
+
+
+def format_plot(plot: PlotArtifact) -> str:
+    x_min, x_max = plot.x_range
+    y_min, y_max = plot.y_range
+    return (
+        f"plot: {len(plot.points)} points, "
+        f"x {_format_number(x_min)}..{_format_number(x_max)}, "
+        f"y {_format_number(y_min)}..{_format_number(y_max)}"
+    )
 
 
 def _unit_symbol(dimension: Dimension) -> str:

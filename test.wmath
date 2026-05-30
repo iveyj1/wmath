@@ -40,6 +40,7 @@ v[2:] |
 append(v, [4]) |
 length(v) |
 dot(v, v) |
+plot(v, [1, 4, 9], [0, 4], [0, 10], [600, 240]) |
 
 # Matrix literal and known matrix arithmetic limitation
 matrix = [[1, 2], [3, 4]] |
