@@ -22,7 +22,7 @@ Milestones 001 through 009 are implemented. The app currently provides a PySide6
 - left source editor
 - right rendered pane
 - placeholder rendering that mirrors source lines
-- basic editor-to-render scroll sync
+- basic two-way editor/render scroll sync
 - larger prototype UI fonts for readability
 - basic active-line marker in the rendered pane
 - basic warning bar for document-level warnings
@@ -39,6 +39,7 @@ Milestones 001 through 009 are implemented. The app currently provides a PySide6
 - default conventional unit display and explicit `| unit` display
 - vector literals, scalar/vector ops, elementwise vector ops, indexing, slicing
 - vector helpers: `append`, `length`, `dot`
+- CSV column import via `csv(path, selector)`
 - textual plot artifacts via `plot(x, y, min_x, max_x, min_y, max_y)`
 - matrix literal validation and display
 - include evaluation as prelude context
@@ -46,8 +47,16 @@ Milestones 001 through 009 are implemented. The app currently provides a PySide6
 - status indicator with line count, evaluation state, and dirty/save state
 - value display mode control: explicit `|` only or all values
 - value column position control using metadata `valueColumnPercent`
+- rendered number formatting controls for significant figures and scientific notation transition
+- font-size control for editor and rendered pane
 
 Include files are evaluated before following rows, but their rows are not rendered in the including sheet.
+
+## Prototype UI Tuning
+
+For now, local prototype spacing/font tuning is read from `wmath_config.json` in the current working directory. It controls font family, letter spacing, editor/rendered font scaling, row height, layout spacing, and plot margins. Restart the app after editing it.
+
+Sheet-specific metadata still controls visible header settings such as `Font`, `Sig`, `Sci`, `Value %`, and `All values`.
 
 ## Development Launch Instructions
 
@@ -99,6 +108,8 @@ resistance = 10 V / A |
 angle = 2 | rad
 ft = 0.3048 m
 distance = 20 m | ft
+# t = csv("run.csv", "time") * s
+# d = csv("run.csv", "distance") * m
 v = [1, 2, 3]
 v[2] |
 v[2:] |
@@ -143,6 +154,25 @@ distance = 20 m | ft
 ```
 
 The value is converted using the variable definition, and the requested display label is preserved. For example, `distance = 20 m | ft` renders in `ft`, not the default built-in `m` label. Display unit expressions are deliberately limited to unit-name arithmetic with names, `*`, `/`, and integer powers. Arbitrary calculations such as `| 2 ft` are rejected.
+
+## CSV Import
+
+CSV vector import reads one numeric CSV column as a dimensionless vector:
+
+```text
+t = csv("run.csv", "time") * s
+d = csv("run.csv", "distance") * m
+plot(t, d, [0 s, 10 s], [0 m, 100 m]) |
+```
+
+String selectors use the first CSV row as headers and skip that row. Numeric selectors are 1-based column indexes and treat every row as data:
+
+```text
+x = csv("headerless.csv", 1)
+y = csv("headerless.csv", 2)
+```
+
+CSV values import as dimensionless numbers; attach units with normal multiplication. Relative paths resolve relative to the current sheet file, or the current working directory for untitled sheets. Completely blank CSV rows are ignored. Missing files, missing columns, empty cells, and nonnumeric selected cells produce row diagnostics.
 
 ## Plotting
 
@@ -201,11 +231,17 @@ Current metadata keys:
 
 - `showValuesMode`: `explicit` or `all_assignments`
 - `valueColumnPercent`: number clamped to 40..90. This controls approximate value placement as a percentage of the rendered pane width.
+- `significantFigures`: integer clamped to 3..15. This controls rendered numeric precision.
+- `scientificMagnitude`: integer clamped to 3..12. Numbers with magnitude outside `10^±scientificMagnitude` render in scientific notation.
+- `fontPointSize`: number clamped to 0..36. `0` uses the platform default; positive values set the rendered font size.
 
 The header controls edit these metadata values:
 
 - `All values`: toggles `showValuesMode` between explicit `|` display and showing all evaluated values.
 - `Value %`: moves the value column position across the rendered pane width.
+- `Sig`: controls significant figures for rendered numbers.
+- `Sci`: controls when rendered numbers switch to scientific notation.
+- `Font`: controls editor and rendered pane font size.
 
 Recent files are stored as local client state under the platform state directory. Current Linux default:
 
@@ -242,7 +278,7 @@ Currently wired in the prototype:
 python -m wmath
 ```
 
-Edit source lines and confirm the rendered pane updates. Move between lines and confirm the rendered pane marks the active source row with `▶`. Add `plot([0, 1, 2], [0, 1, 4], 0, 2, 0, 4) |` and confirm a simple plot appears. Remove `|` from a row and confirm its value hides; enable `All values` and confirm values return. Change `Value %` and confirm the value column moves. Add a missing include such as `include "missing.wmath"` and confirm a warning appears in the warning bar and rendered row. Add an invalid row such as `missing + 1 |` and confirm status reports an error.
+Edit source lines and confirm the rendered pane updates. Move between lines and confirm the rendered pane marks the active source row with `▶`. Scroll either pane and confirm the other pane follows proportionally. Add `plot([0, 1, 2], [0, 1, 4], 0, 2, 0, 4) |` and confirm a simple plot appears. Remove `|` from a row and confirm its value hides; enable `All values` and confirm values return. Change `Value %` and confirm the value column moves. Add a missing include such as `include "missing.wmath"` and confirm a warning appears in the warning bar and rendered row. Add an invalid row such as `missing + 1 |` and confirm status reports an error.
 
 For storage behavior:
 
@@ -251,11 +287,13 @@ For storage behavior:
 3. Confirm `example.wmath` and `example.wmath.meta.json` are created.
 4. Edit again and confirm the status/window title shows dirty state.
 5. Use `Ctrl+S` and confirm dirty state clears. Edit, then undo back to saved text and confirm dirty state clears again.
-6. Use `Ctrl+O` or an MRU button while dirty and confirm the discard prompt appears.
+6. Close the window while dirty and confirm Save / Discard / Cancel choices work.
+7. Use `Ctrl+O` or an MRU button while dirty and confirm the discard prompt appears.
 
 ## Known Prototype Limitations
 
 - User-defined unit registries are not implemented.
+- CSV import rereads files on recalculation; caching is not implemented yet.
 - Plotting is basic: drawn plots have fixed styling and no zoom/pan/hover interaction yet.
 - Matrix arithmetic is not implemented; matrix operations report `matrix arithmetic is not implemented yet`.
 - Source/venv install is the current packaging approach; binary packaging is deferred.

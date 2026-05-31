@@ -16,6 +16,11 @@ class NameExpr:
 
 
 @dataclass(frozen=True)
+class StringExpr:
+    value: str
+
+
+@dataclass(frozen=True)
 class UnaryExpr:
     op: str
     expr: Expr
@@ -52,7 +57,7 @@ class SliceExpr:
     end: Expr | None
 
 
-Expr = NumberExpr | NameExpr | UnaryExpr | BinaryExpr | CallExpr | ArrayExpr | IndexExpr | SliceExpr
+Expr = NumberExpr | NameExpr | StringExpr | UnaryExpr | BinaryExpr | CallExpr | ArrayExpr | IndexExpr | SliceExpr
 
 
 @dataclass(frozen=True)

@@ -48,7 +48,7 @@ Acceptance criteria:
 - [x] Diagnostics can be attached to individual rows.
 - [x] UI updates rendered pane on edit.
 - [x] Active editor line highlights corresponding rendered row.
-- [x] Basic scroll sync exists or is explicitly documented as pending.
+- [x] Basic two-way scroll sync exists.
 
 ### 004 — Lexer and Parser
 
@@ -122,10 +122,11 @@ Goal: satisfy v1 interaction acceptance criteria.
 Acceptance criteria:
 
 - [x] Status indicator includes line count, evaluation status, dirty/save state.
+- [x] Save/discard/cancel prompt appears on exit when dirty.
 - [x] Include warning bar implemented.
 - [x] File action buttons and shortcuts implemented, including New.
 - [x] Undo/redo behavior works via editor widget and dirty state follows saved text.
-- [x] Value column placement and display mode use metadata settings.
+- [x] Value column placement, display mode, number formatting, and font size use metadata settings.
 - [x] Acceptance criteria from `spec.md` section 10 reviewed.
 
 ### 010 — Cross-Platform Source Run and Packaging Readiness
@@ -175,7 +176,7 @@ Acceptance criteria:
 
 - [x] Rendered pane can display mixed row content: text rows and plot rows/widgets.
 - [x] A minimal Qt plot widget draws axes, line/points, and min/max labels.
-- [x] Scroll synchronization and active-row indication remain usable with plot rows.
+- [x] Two-way scroll synchronization and active-row indication remain usable with plot rows.
 - [x] No heavy plotting dependency such as matplotlib is required.
 
 ### 014 — Plot Range and Size Arguments
@@ -194,6 +195,23 @@ Acceptance criteria:
 - [x] Diagnostics cover malformed ranges, malformed size, incompatible bounds, and non-increasing bounds.
 - [x] Docs and manual test sheet include enhanced plot examples.
 
+### 015 — CSV Vector Import
+
+Goal: import numeric CSV columns as vectors for plotting and data-analysis workflows.
+
+Acceptance criteria:
+
+- [x] String literals parse as expression values.
+- [x] `csv(path, selector)` built-in exists.
+- [x] `path` is a string value and resolves relative to the current sheet file, or current working directory for untitled sheets.
+- [x] String selector uses the first row as headers, selects by exact header text, and skips the header row.
+- [x] Numeric selector is a dimensionless 1-based integer column index and treats all rows as data.
+- [x] Imported values are dimensionless scalar vectors, so units can be attached with existing vector-scalar multiplication.
+- [x] Completely blank rows are ignored.
+- [x] Diagnostics cover missing files, missing columns, malformed selectors, empty selected cells, and nonnumeric selected cells.
+- [x] Tests cover header selection, index selection, relative path resolution, unit attachment, and bad data.
+- [x] Docs and manual examples include CSV-to-plot workflow.
+
 ## Current Focus
 
-Milestone 014 is implemented. Next implementation focus should be selected from remaining backlog.
+Milestone 015 is implemented. Next implementation focus should be selected from remaining backlog.

@@ -42,6 +42,12 @@ length(v) |
 dot(v, v) |
 plot(v, [1, 4, 9], [0, 4], [0, 10], [600, 240]) |
 
+# CSV import and plot
+t_csv = csv("test_data.csv", "time") * s
+d_csv = csv("test_data.csv", "distance") * m
+plot(t_csv, d_csv, [0 s, 6 s], [0 m, 10 m], [500, 220]) |
+
+
 # Matrix literal and known matrix arithmetic limitation
 matrix = [[1, 2], [3, 4]] |
 matrix + matrix |

@@ -21,6 +21,7 @@ It reflects current intended behavior and intentionally drops legacy syntax supp
 - Scalars, vectors, and matrix literals (matrix arithmetic explicitly deferred).
 - User-defined functions and selected built-in functions.
 - Basic plot declarations over vectors as structured/textual render artifacts.
+- CSV column import as dimensionless vectors for plotting/data workflows.
 - Unit-aware arithmetic over SI base dimensions `(m, kg, s, A, K, mol, cd)`.
 - Save/load, MRU display, include support, undo/redo.
 
@@ -112,7 +113,7 @@ Rules:
 
 ## 4.4 Expressions and Precedence
 
-- Literals: numbers
+- Literals: numbers and strings
 - Names: variables, units, functions
 - Function call: `f(a, b)`
 - Arrays/vectors: `[1, 2, 3]`
@@ -155,6 +156,7 @@ Built-ins required:
 - Scalar math: `sin`, `cos`, `tan`, `sqrt`, `log`, `exp`
 - Vector helpers: `append(v1, v2)`, `length(v)`, `dot(v1, v2)`
 - Plot helper: `plot(x, y, min_x, max_x, min_y, max_y)`
+- CSV helper: `csv(path, selector)`
 
 Built-in constraints:
 
@@ -162,8 +164,50 @@ Built-in constraints:
 - `sqrt`: scalar, non-negative value, even unit exponents.
 - `dot`: vectors only, same length, term units must be compatible for sum.
 - `plot`: `x` and `y` must be scalar vectors of the same length with at least two points; bounds must be scalars, dimensionally compatible with the relevant axis, and increasing.
+- `csv`: `path` must be a string; selector must be a string header name or a dimensionless 1-based integer column index.
 
-## 5.4 Vector Operations (Required)
+## 5.4 CSV Vector Import
+
+`csv(path, selector)` imports one numeric CSV column as a dimensionless vector. Use normal unit multiplication to attach units after import.
+
+Examples:
+
+```text
+t = csv("run.csv", "time") * s
+d = csv("run.csv", "distance") * m
+plot(t, d, [0 s, 10 s], [0 m, 100 m]) |
+```
+
+Header selection:
+
+```text
+value = csv("data.csv", "distance")
+```
+
+- The first CSV row is treated as a header row.
+- The named column is selected by exact header text.
+- Header row is skipped when reading numeric values.
+
+Index selection:
+
+```text
+value = csv("data.csv", 2)
+```
+
+- Column index is 1-based.
+- All rows are treated as data.
+- Header rows are not guessed or skipped for numeric selectors.
+
+Rules:
+
+- Relative CSV paths resolve like includes: relative to the current sheet file, or current working directory for untitled sheets.
+- CSV import uses Python/stdlib-style CSV parsing semantics in the prototype; quoted fields and commas inside quoted fields are supported.
+- Completely blank rows are ignored.
+- Empty selected cells, nonnumeric selected cells, missing files, missing columns, and malformed selectors produce row diagnostics.
+- CSV values are imported as dimensionless scalars; units are attached explicitly in sheet expressions.
+- CSV files are reread on recalculation initially; caching may be added later if needed.
+
+## 5.5 Vector Operations (Required)
 
 - Scalar-vector and vector-scalar `+ - * /`.
 - Vector-vector elementwise `+ - * /` with same-length requirement.
@@ -174,7 +218,7 @@ Built-in constraints:
   - defaults: `[:b]` starts at 1, `[a:]` ends at length.
   - bounds errors are reported.
 
-## 5.5 Plot Values
+## 5.6 Plot Values
 
 `plot` creates a plot artifact from two vectors. The baseline positional form is:
 
@@ -221,7 +265,7 @@ d = [0, 4.9, 19.6, 44.1] m
 plot(t, d, 0 s, 3 s, 0 m, 50 m) |
 ```
 
-## 5.6 Matrix Groundwork (Required)
+## 5.7 Matrix Groundwork (Required)
 
 - Parse/evaluate nested array literals as matrix values.
 - Validate consistent row widths and compatible element units.
@@ -266,6 +310,9 @@ Metadata keys required:
 
 - `showValuesMode`: `explicit | all_assignments`
 - `valueColumnPercent`: number (40..90)
+- `significantFigures`: integer (3..15)
+- `scientificMagnitude`: integer (3..12)
+- `fontPointSize`: number (0..36, where 0 means platform default)
 
 ## 7.2 MRU
 
@@ -301,7 +348,7 @@ A clean-room implementation is acceptable if all are true:
 5. Matrix literals parse/evaluate; matrix arithmetic reports not implemented.
 6. Unit checking and conversions follow dimension rules above.
 7. Basic `plot(x, y, min_x, max_x, min_y, max_y)` validation and textual artifact rendering works.
-8. Save/load + metadata + dirty prompts + MRU + shortcuts behave as specified.
+8. Save/load + metadata + dirty prompts, including exit Save / Discard / Cancel, + MRU + shortcuts behave as specified.
 
 ## 11. Technology Guidance
 

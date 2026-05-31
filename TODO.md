@@ -6,7 +6,13 @@
 
 ## Immediate
 
-Milestone 014 complete. Next immediate focus is not selected.
+
+- [x] Save/quit/cancel dialog on exit if dirty set
+- [x] Add root `wmath_config.json` knobs for prototype font, spacing, and plot layout tuning.
+- [x] Add control of at least the number of significant figures and standard/scientific transition magnitude
+      for rendered numbers.
+- [x] Control for font size
+
 
 - [x] Add README or expand docs with Linux venv install/run summary.
 - [x] Add Windows venv install/run summary.
@@ -34,6 +40,18 @@ Milestone 014 complete. Next immediate focus is not selected.
 - [x] Store requested plot size on the Qt-free core plot artifact.
 - [x] Honor requested plot height in the Qt plot widget and treat requested width as a maximum within the rendered pane.
 - [x] Add diagnostics/tests for malformed range and size vectors.
+
+## CSV Import Backlog
+
+- [x] Add string literal expression parsing/evaluation.
+- [x] Add `csv(path, selector)` built-in returning a dimensionless vector.
+- [x] Resolve relative CSV paths from current sheet file path, falling back to current working directory for untitled sheets.
+- [x] Support string header selector with first-row header skip.
+- [x] Support dimensionless 1-based numeric column selector with all rows treated as data.
+- [x] Ignore completely blank CSV rows.
+- [x] Add diagnostics for missing files, missing columns, bad selectors, empty selected cells, and nonnumeric selected cells.
+- [x] Add tests for header selection, index selection, relative paths, unit attachment, and bad data.
+- [x] Add docs/manual examples for CSV-to-plot workflow.
 
 ## Core Backlog
 
@@ -63,7 +81,7 @@ Milestone 014 complete. Next immediate focus is not selected.
 - [x] Dirty replace confirmation.
 - [x] MRU persistence.
 - [x] Platform-aware MRU state location for Windows source-run support.
-- [x] Editor/render scroll sync, proportional basic.
+- [x] Editor/render two-way scroll sync, proportional basic.
 - [x] Active line highlight, basic marker in rendered pane.
 - [x] Increase prototype UI font sizes for readability.
 - [x] Suppress known harmless Qt AT-SPI startup warning.
@@ -78,6 +96,7 @@ Milestone 014 complete. Next immediate focus is not selected.
 ## Documentation Backlog
 
 - [x] Document plot syntax and limitations when implemented.
+- [x] Document CSV import when implemented.
 - [x] Document enhanced plot range/size forms when implemented.
 - [x] Expand `docs/user.md` with current syntax examples.
 - [x] Document Milestone 001 launch and architecture notes in user/dev docs.

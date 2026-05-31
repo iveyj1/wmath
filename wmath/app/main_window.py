@@ -8,6 +8,7 @@ from PySide6.QtCore import QSignalBlocker, Qt
 from PySide6.QtGui import QAction, QFont, QKeySequence
 from PySide6.QtWidgets import (
     QCheckBox,
+    QDoubleSpinBox,
     QFileDialog,
     QHBoxLayout,
     QLabel,
@@ -24,6 +25,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from wmath.app.config import load_app_config
 from wmath.app.plot_widget import PlotWidget
 from wmath.core import (
     EvalInput,
@@ -55,6 +57,8 @@ class MainWindow(QMainWindow):
         self._mru_files = load_mru()
         self._last_output: EvalOutput | None = None
         self._active_line = 0
+        self._syncing_scroll = False
+        self._app_config = load_app_config()
 
         self._saved_source = ""
 
@@ -119,6 +123,28 @@ class MainWindow(QMainWindow):
         self.value_column_percent.setToolTip("Approximate value column position in rendered pane")
         self.value_column_percent.valueChanged.connect(self._on_metadata_controls_changed)
         header_layout.addWidget(self.value_column_percent)
+
+        header_layout.addWidget(QLabel("Sig", header))
+        self.significant_figures = QSpinBox(header)
+        self.significant_figures.setRange(3, 15)
+        self.significant_figures.setToolTip("Rendered number significant figures")
+        self.significant_figures.valueChanged.connect(self._on_metadata_controls_changed)
+        header_layout.addWidget(self.significant_figures)
+
+        header_layout.addWidget(QLabel("Sci", header))
+        self.scientific_magnitude = QSpinBox(header)
+        self.scientific_magnitude.setRange(3, 12)
+        self.scientific_magnitude.setToolTip("Use scientific notation outside 10^±this magnitude")
+        self.scientific_magnitude.valueChanged.connect(self._on_metadata_controls_changed)
+        header_layout.addWidget(self.scientific_magnitude)
+
+        header_layout.addWidget(QLabel("Font", header))
+        self.font_point_size = QDoubleSpinBox(header)
+        self.font_point_size.setRange(6.0, 36.0)
+        self.font_point_size.setSingleStep(0.5)
+        self.font_point_size.setToolTip("Rendered font size; editor is about 8% smaller")
+        self.font_point_size.valueChanged.connect(self._on_metadata_controls_changed)
+        header_layout.addWidget(self.font_point_size)
         self._sync_metadata_controls()
 
         for action in (self.new_action, self.open_action, self.save_action, self.save_as_action):
@@ -150,13 +176,14 @@ class MainWindow(QMainWindow):
         self.editor.setPlaceholderText("Enter wmath source here…")
         self.editor.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)
         self.editor.setPlainText("length = 2 m\nwidth = 3 m\narea = length * width |")
-        self.editor.setFont(self._mono_font())
+        self.editor.setFont(self._editor_font())
+        self.editor.document().setDocumentMargin(self._app_config.editorDocumentMargin)
 
         self.rendered_content = QWidget(self.splitter)
         self.rendered_content.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Expanding)
         self.rendered_layout = QVBoxLayout(self.rendered_content)
         self.rendered_layout.setContentsMargins(0, 0, 0, 0)
-        self.rendered_layout.setSpacing(2)
+        self.rendered_layout.setSpacing(self._app_config.renderedLayoutSpacing)
 
         self.rendered_scroll = QScrollArea(self.splitter)
         self.rendered_scroll.setWidgetResizable(True)
@@ -174,6 +201,7 @@ class MainWindow(QMainWindow):
         self.editor.textChanged.connect(self._on_text_changed)
         self.editor.cursorPositionChanged.connect(self._update_active_line)
         self.editor.verticalScrollBar().valueChanged.connect(self._sync_render_scroll)
+        self.rendered_scroll.verticalScrollBar().valueChanged.connect(self._sync_editor_scroll)
         self.splitter.splitterMoved.connect(lambda _pos, _index: self._rerender_current_output())
         self.undo_action.triggered.connect(self.editor.undo)
         self.redo_action.triggered.connect(self.editor.redo)
@@ -314,30 +342,56 @@ class MainWindow(QMainWindow):
     def _sync_metadata_controls(self) -> None:
         if not hasattr(self, "show_all_values"):
             return
-        with QSignalBlocker(self.show_all_values), QSignalBlocker(self.value_column_percent):
+        with (
+            QSignalBlocker(self.show_all_values),
+            QSignalBlocker(self.value_column_percent),
+            QSignalBlocker(self.significant_figures),
+            QSignalBlocker(self.scientific_magnitude),
+            QSignalBlocker(self.font_point_size),
+        ):
             self.show_all_values.setChecked(self._metadata.showValuesMode == "all_assignments")
             self.value_column_percent.setValue(round(self._metadata.valueColumnPercent))
+            self.significant_figures.setValue(self._metadata.significantFigures)
+            self.scientific_magnitude.setValue(self._metadata.scientificMagnitude)
+            self.font_point_size.setValue(self._effective_font_point_size())
+        self._apply_editor_font()
 
     def _on_metadata_controls_changed(self) -> None:
         mode = "all_assignments" if self.show_all_values.isChecked() else "explicit"
         self._metadata = SheetMetadata(
             showValuesMode=mode,
             valueColumnPercent=float(self.value_column_percent.value()),
+            significantFigures=int(self.significant_figures.value()),
+            scientificMagnitude=int(self.scientific_magnitude.value()),
+            fontPointSize=float(self.font_point_size.value()),
         )
         if self._current_file is not None:
             try:
                 save_metadata(self._current_file, self._metadata)
             except OSError as exc:
                 QMessageBox.warning(self, "Metadata save failed", f"Could not save metadata:\n{exc}")
+        self._apply_editor_font()
         self._recalculate(mark_dirty=False)
 
-    def _mono_font(self) -> QFont:
-        font = QFont("monospace")
+    def _effective_font_point_size(self) -> float:
+        return self._metadata.fontPointSize or max(10.0, self.font().pointSizeF())
+
+    def _mono_font(self, scale: float = 1.0) -> QFont:
+        font = QFont(self._app_config.fontFamily)
         font.setStyleHint(QFont.StyleHint.Monospace)
-        point_size = self.font().pointSizeF()
-        if point_size > 0:
-            font.setPointSizeF(point_size)
+        font.setPointSizeF(self._effective_font_point_size() * scale)
+        font.setLetterSpacing(QFont.SpacingType.PercentageSpacing, self._app_config.fontLetterSpacingPercent)
         return font
+
+    def _editor_font(self) -> QFont:
+        return self._mono_font(self._app_config.editorFontScale)
+
+    def _render_font(self) -> QFont:
+        return self._mono_font(self._app_config.renderedFontScale)
+
+    def _apply_editor_font(self) -> None:
+        if hasattr(self, "editor"):
+            self.editor.setFont(self._editor_font())
 
     def _on_text_changed(self) -> None:
         self._recalculate(mark_dirty=True)
@@ -362,7 +416,10 @@ class MainWindow(QMainWindow):
             row_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
             row_label.setMinimumWidth(0)
             row_label.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
-            row_label.setFont(self._mono_font())
+            row_label.setFont(self._render_font())
+            row_label.setMinimumHeight(
+                round(row_label.fontMetrics().height() * self._app_config.renderedRowHeightScale)
+            )
             row_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
             row_label.setTextFormat(Qt.TextFormat.PlainText)
             row_label.setText(
@@ -375,7 +432,7 @@ class MainWindow(QMainWindow):
             )
             self.rendered_layout.addWidget(row_label)
             if row.artifact is not None:
-                self.rendered_layout.addWidget(PlotWidget(row.artifact, self.rendered_content))
+                self.rendered_layout.addWidget(PlotWidget(row.artifact, self._app_config, self.rendered_content))
         self.rendered_layout.addStretch(1)
         self.rendered_scroll.verticalScrollBar().setValue(scroll_value)
         self._update_warning_bar(output)
@@ -402,19 +459,55 @@ class MainWindow(QMainWindow):
         self.warning_bar.setVisible(bool(warning_text))
 
     def _sync_render_scroll(self, editor_value: int) -> None:
-        editor_bar = self.editor.verticalScrollBar()
-        render_bar = self.rendered_scroll.verticalScrollBar()
-        if editor_bar.maximum() <= editor_bar.minimum():
-            render_bar.setValue(render_bar.minimum())
+        if self._syncing_scroll:
             return
+        self._sync_scrollbars(self.editor.verticalScrollBar(), self.rendered_scroll.verticalScrollBar(), editor_value)
 
-        ratio = (editor_value - editor_bar.minimum()) / (editor_bar.maximum() - editor_bar.minimum())
-        render_value = round(render_bar.minimum() + ratio * (render_bar.maximum() - render_bar.minimum()))
-        render_bar.setValue(render_value)
+    def _sync_editor_scroll(self, render_value: int) -> None:
+        if self._syncing_scroll:
+            return
+        self._sync_scrollbars(self.rendered_scroll.verticalScrollBar(), self.editor.verticalScrollBar(), render_value)
+
+    def _sync_scrollbars(self, source_bar, target_bar, source_value: int) -> None:
+        if source_bar.maximum() <= source_bar.minimum():
+            target_value = target_bar.minimum()
+        else:
+            ratio = (source_value - source_bar.minimum()) / (source_bar.maximum() - source_bar.minimum())
+            target_value = round(target_bar.minimum() + ratio * (target_bar.maximum() - target_bar.minimum()))
+        self._syncing_scroll = True
+        try:
+            target_bar.setValue(target_value)
+        finally:
+            self._syncing_scroll = False
 
     def resizeEvent(self, event) -> None:  # noqa: N802
         super().resizeEvent(event)
         self._rerender_current_output()
+
+    def closeEvent(self, event) -> None:  # noqa: N802
+        if not self._dirty:
+            event.accept()
+            return
+        choice = QMessageBox.question(
+            self,
+            "Save changes?",
+            "The current document has unsaved changes. Save before quitting?",
+            QMessageBox.StandardButton.Save
+            | QMessageBox.StandardButton.Discard
+            | QMessageBox.StandardButton.Cancel,
+            QMessageBox.StandardButton.Save,
+        )
+        if choice == QMessageBox.StandardButton.Cancel:
+            event.ignore()
+            return
+        if choice == QMessageBox.StandardButton.Discard:
+            event.accept()
+            return
+        self.save_file()
+        if self._dirty:
+            event.ignore()
+        else:
+            event.accept()
 
     def _update_status(self) -> None:
         line_count = len(self.editor.toPlainText().splitlines()) or 1

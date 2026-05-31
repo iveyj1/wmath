@@ -67,6 +67,13 @@ def test_evaluator_all_values_mode_ignores_display_marker_state() -> None:
     assert [row.value for row in output.rows] == ["2", "3"]
 
 
+def test_evaluator_number_format_metadata_controls_output() -> None:
+    metadata = SheetMetadata(significantFigures=4, scientificMagnitude=3)
+    output = evaluate(EvalInput("12345.6789 |\n0.00012345 |", metadata=metadata))
+
+    assert [row.value for row in output.rows] == ["1.235e+04", "1.234e-04"]
+
+
 def test_evaluator_rendered_formula_omits_display_suffix() -> None:
     output = evaluate(EvalInput("work = 20 J | J"))
 

@@ -35,13 +35,18 @@ def test_metadata_round_trip(tmp_path: Path) -> None:
 def test_metadata_defaults_and_clamps_invalid_values(tmp_path: Path) -> None:
     sheet = tmp_path / "example.wmath"
     metadata_path(sheet).write_text(
-        '{"showValuesMode": "bad", "valueColumnPercent": 1000}', encoding="utf-8"
+        '{"showValuesMode": "bad", "valueColumnPercent": 1000, '
+        '"significantFigures": 99, "scientificMagnitude": 99, "fontPointSize": 999}',
+        encoding="utf-8",
     )
 
     metadata = load_metadata(sheet)
 
     assert metadata.showValuesMode == "explicit"
     assert metadata.valueColumnPercent == 90.0
+    assert metadata.significantFigures == 15
+    assert metadata.scientificMagnitude == 12
+    assert metadata.fontPointSize == 36.0
 
 
 def test_default_mru_path_uses_xdg_state_home(tmp_path: Path) -> None:

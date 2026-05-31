@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import csv
 import math
 from dataclasses import dataclass
 from pathlib import Path
@@ -20,11 +21,12 @@ from wmath.core.ast import (
     NameExpr,
     NumberExpr,
     SliceExpr,
+    StringExpr,
     UnaryExpr,
 )
 from wmath.core.models import Diagnostic, EvalInput, EvalOutput, PlotArtifact, RenderedRow
 from wmath.core.parser import parse_line
-from wmath.core.values import DIMENSIONLESS, Matrix, Scalar, Value, Vector, format_value, unit_value
+from wmath.core.values import DIMENSIONLESS, Matrix, Scalar, StringValue, Value, Vector, format_value, unit_value
 
 
 @dataclass(frozen=True)
@@ -37,11 +39,12 @@ class UserFunction:
 class Environment:
     values: dict[str, Value]
     functions: dict[str, UserFunction]
+    file_path: Path | None = None
 
 
 def evaluate(eval_input: EvalInput) -> EvalOutput:
-    env = Environment(values={}, functions={})
     file_path = eval_input.file_path.expanduser().resolve() if eval_input.file_path else None
+    env = Environment(values={}, functions={}, file_path=file_path)
     include_stack = (file_path,) if file_path is not None else ()
     return _evaluate_source(
         eval_input.source,
@@ -60,6 +63,8 @@ def _evaluate_source(
     include_stack: tuple[Path, ...],
     eval_metadata: object | None = None,
 ) -> EvalOutput:
+    old_file_path = env.file_path
+    env.file_path = file_path
     rows: list[RenderedRow] = []
     warnings: list[Diagnostic] = []
     for line_number, line in enumerate(_logical_lines(source), start=1):
@@ -83,7 +88,9 @@ def _evaluate_source(
                     value = _eval_expr(stmt.expr, env)
                     env.values[stmt.name] = value
                     if stmt.show_value or _show_all_values(eval_metadata):
-                        value_text, artifact = _format_display(value, stmt.display, _display_label(line), env)
+                        value_text, artifact = _format_display(
+                            value, stmt.display, _display_label(line), env, eval_metadata
+                        )
                 elif isinstance(stmt, FunctionStmt):
                     env.functions[stmt.name] = UserFunction(stmt.params, stmt.expr)
                     if stmt.show_value:
@@ -91,10 +98,13 @@ def _evaluate_source(
                 elif isinstance(stmt, ExpressionStmt):
                     value = _eval_expr(stmt.expr, env)
                     if stmt.show_value or _show_all_values(eval_metadata):
-                        value_text, artifact = _format_display(value, stmt.display, _display_label(line), env)
+                        value_text, artifact = _format_display(
+                            value, stmt.display, _display_label(line), env, eval_metadata
+                        )
             except EvalError as exc:
                 diagnostics.append(Diagnostic(str(exc)))
         rows.append(RenderedRow(line_number, formula, value_text, artifact, tuple(diagnostics)))
+    env.file_path = old_file_path
     return EvalOutput(rows=tuple(rows), warnings=tuple(warnings))
 
 
@@ -174,6 +184,7 @@ def _format_display(
     display: Expr | None,
     display_label: str | None,
     env: Environment,
+    eval_metadata: object | None,
 ) -> tuple[str, PlotArtifact | None]:
     display_unit = None
     if display is not None:
@@ -185,7 +196,16 @@ def _format_display(
             raise EvalError("display unit must be scalar")
         display_unit = unit
     try:
-        return format_value(value, display_unit, display_label), value if isinstance(value, PlotArtifact) else None
+        return (
+            format_value(
+                value,
+                display_unit,
+                display_label,
+                significant_figures=getattr(eval_metadata, "significantFigures", 12),
+                scientific_magnitude=getattr(eval_metadata, "scientificMagnitude", 12),
+            ),
+            value if isinstance(value, PlotArtifact) else None,
+        )
     except ValueError as exc:
         raise EvalError(str(exc)) from exc
 
@@ -248,6 +268,8 @@ class EvalError(Exception):
 def _eval_expr(expr: Expr, env: Environment) -> Value:
     if isinstance(expr, NumberExpr):
         return Scalar(expr.value)
+    if isinstance(expr, StringExpr):
+        return StringValue(expr.value)
     if isinstance(expr, NameExpr):
         if expr.name in env.values:
             return env.values[expr.name]
@@ -295,6 +317,8 @@ def _eval_array(expr: ArrayExpr, env: Environment) -> Value:
 
 
 def _eval_binary(left: Value, op: str, right: Value) -> Value:
+    if isinstance(left, StringValue) or isinstance(right, StringValue):
+        raise EvalError("strings do not support arithmetic")
     if isinstance(left, PlotArtifact) or isinstance(right, PlotArtifact):
         raise EvalError("plot values do not support arithmetic")
     if isinstance(left, Matrix) or isinstance(right, Matrix):
@@ -359,13 +383,17 @@ def _eval_slice(collection: Value, start: Value | None, end: Value | None) -> Ve
 
 def _call_function(name: str, args: tuple[Value, ...], env: Environment) -> Value:
     if name in _BUILTINS:
-        return _BUILTINS[name](args)
+        return _BUILTINS[name](args, env)
     function = env.functions.get(name)
     if function is None:
         raise EvalError(f"unknown function: {name}")
     if len(args) != len(function.params):
         raise EvalError(f"wrong argument count for {name}")
-    child = Environment(values={**env.values, **dict(zip(function.params, args, strict=True))}, functions=env.functions)
+    child = Environment(
+        values={**env.values, **dict(zip(function.params, args, strict=True))},
+        functions=env.functions,
+        file_path=env.file_path,
+    )
     return _eval_expr(function.body, child)
 
 
@@ -505,6 +533,66 @@ def _require_plot_bounds_dimensions(
         raise EvalError("plot y bounds are dimensionally incompatible")
 
 
+def _builtin_csv(args: tuple[Value, ...], env: Environment) -> Vector:
+    if len(args) != 2:
+        raise EvalError("csv expects path and column selector")
+    path_value, selector = args
+    if not isinstance(path_value, StringValue):
+        raise EvalError("csv path must be a string")
+    path = _resolve_data_path(path_value.value, env.file_path)
+    try:
+        with path.open(newline="", encoding="utf-8") as handle:
+            rows = [row for row in csv.reader(handle) if any(cell.strip() for cell in row)]
+    except OSError as exc:
+        raise EvalError(f"csv file not found: {path_value.value}") from exc
+
+    if isinstance(selector, StringValue):
+        return _csv_by_header(rows, selector.value)
+    if isinstance(selector, Scalar):
+        column_index = _as_index(selector) - 1
+        return _csv_by_index(rows, column_index)
+    raise EvalError("csv selector must be a string header or 1-based column index")
+
+
+def _resolve_data_path(path_text: str, file_path: Path | None) -> Path:
+    path = Path(path_text).expanduser()
+    if path.is_absolute():
+        return path.resolve()
+    base_dir = file_path.parent if file_path is not None else Path.cwd()
+    return (base_dir / path).resolve()
+
+
+def _csv_by_header(rows: list[list[str]], header: str) -> Vector:
+    if not rows:
+        raise EvalError("csv file is empty")
+    try:
+        column_index = rows[0].index(header)
+    except ValueError as exc:
+        raise EvalError(f"csv header not found: {header}") from exc
+    return _csv_column_to_vector(rows[1:], column_index, skip_row_offset=2)
+
+
+def _csv_by_index(rows: list[list[str]], column_index: int) -> Vector:
+    if column_index < 0:
+        raise EvalError("csv column index must be >= 1")
+    return _csv_column_to_vector(rows, column_index, skip_row_offset=1)
+
+
+def _csv_column_to_vector(rows: list[list[str]], column_index: int, *, skip_row_offset: int) -> Vector:
+    values: list[Scalar] = []
+    for row_offset, row in enumerate(rows, start=skip_row_offset):
+        if column_index >= len(row):
+            raise EvalError(f"csv row {row_offset} missing selected column")
+        cell = row[column_index].strip()
+        if not cell:
+            raise EvalError(f"csv row {row_offset} has empty selected cell")
+        try:
+            values.append(Scalar(float(cell)))
+        except ValueError as exc:
+            raise EvalError(f"csv row {row_offset} has nonnumeric selected cell: {cell!r}") from exc
+    return Vector(tuple(values))
+
+
 def _as_index(value: Value) -> int:
     if not isinstance(value, Scalar) or value.dimension != DIMENSIONLESS or not value.value.is_integer():
         raise EvalError("index must be a dimensionless integer")
@@ -528,15 +616,16 @@ def _combine_dim(left: tuple[int, ...], right: tuple[int, ...], sign: int) -> tu
     return tuple(a + sign * b for a, b in zip(left, right, strict=True))
 
 
-_BUILTINS: dict[str, Callable[[tuple[Value, ...]], Value]] = {
-    "sin": lambda args: _builtin_scalar_1("sin", args, math.sin),
-    "cos": lambda args: _builtin_scalar_1("cos", args, math.cos),
-    "tan": lambda args: _builtin_scalar_1("tan", args, math.tan),
-    "log": lambda args: _builtin_scalar_1("log", args, math.log),
-    "exp": lambda args: _builtin_scalar_1("exp", args, math.exp),
-    "sqrt": _builtin_sqrt,
-    "append": _builtin_append,
-    "length": _builtin_length,
-    "dot": _builtin_dot,
-    "plot": _builtin_plot,
+_BUILTINS: dict[str, Callable[[tuple[Value, ...], Environment], Value]] = {
+    "sin": lambda args, _env: _builtin_scalar_1("sin", args, math.sin),
+    "cos": lambda args, _env: _builtin_scalar_1("cos", args, math.cos),
+    "tan": lambda args, _env: _builtin_scalar_1("tan", args, math.tan),
+    "log": lambda args, _env: _builtin_scalar_1("log", args, math.log),
+    "exp": lambda args, _env: _builtin_scalar_1("exp", args, math.exp),
+    "sqrt": lambda args, _env: _builtin_sqrt(args),
+    "append": lambda args, _env: _builtin_append(args),
+    "length": lambda args, _env: _builtin_length(args),
+    "dot": lambda args, _env: _builtin_dot(args),
+    "plot": lambda args, _env: _builtin_plot(args),
+    "csv": _builtin_csv,
 }

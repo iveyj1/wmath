@@ -49,6 +49,18 @@ distance = 20 m | ft
 
 The value is converted and rendered with the requested label, e.g. `65.6167979003 ft`.
 
+## CSV import
+
+CSV import reads numeric columns as vectors:
+
+```text
+t = csv("run.csv", "time") * s
+d = csv("run.csv", "distance") * m
+plot(t, d, [0 s, 10 s], [0 m, 100 m]) |
+```
+
+CSV values import as dimensionless vectors; attach units in sheet expressions.
+
 ## Plotting
 
 Vector plotting uses:

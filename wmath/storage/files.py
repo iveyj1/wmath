@@ -16,6 +16,9 @@ class SheetMetadata:
 
     showValuesMode: ShowValuesMode = "explicit"
     valueColumnPercent: float = 60.0
+    significantFigures: int = 12
+    scientificMagnitude: int = 12
+    fontPointSize: float = 0.0
 
 
 def metadata_path(sheet_path: Path) -> Path:
@@ -72,4 +75,25 @@ def _metadata_from_dict(raw: dict[str, Any]) -> SheetMetadata:
         value_column = 60.0
     value_column = float(max(40.0, min(90.0, value_column)))
 
-    return SheetMetadata(showValuesMode=mode, valueColumnPercent=value_column)
+    significant = raw.get("significantFigures")
+    if not isinstance(significant, int):
+        significant = 12
+    significant = max(3, min(15, significant))
+
+    scientific = raw.get("scientificMagnitude")
+    if not isinstance(scientific, int):
+        scientific = 12
+    scientific = max(3, min(12, scientific))
+
+    font_size = raw.get("fontPointSize")
+    if not isinstance(font_size, int | float):
+        font_size = 0.0
+    font_size = float(max(0.0, min(36.0, font_size)))
+
+    return SheetMetadata(
+        showValuesMode=mode,
+        valueColumnPercent=value_column,
+        significantFigures=significant,
+        scientificMagnitude=scientific,
+        fontPointSize=font_size,
+    )

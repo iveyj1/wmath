@@ -12,11 +12,13 @@ Current layout:
 
 ```text
 wmath/
-  app/        # PySide6 application, windows, widgets, actions
+  app/        # PySide6 application, windows, widgets, actions, prototype UI config
   core/       # lexer, parser, evaluator, values/units; no Qt imports
   storage/    # file metadata, MRU, persistence helpers
   __main__.py # `python -m wmath` entry point
 ```
+
+`wmath_config.json` in the current working directory is a temporary prototype UI-tuning file for font family, letter spacing, row spacing, and plot margins. It is intentionally separate from sheet metadata and can be replaced by real preferences later.
 
 Milestone 001 uses `wmath.core.placeholder.evaluate_placeholder()` as a temporary render pipeline. It returns core `EvalOutput` data and has no Qt dependency.
 
@@ -48,11 +50,11 @@ Milestones 006 and 007 add `wmath.core.values` and expand `evaluator.py` beyond 
 
 Milestone 008 implements include evaluation in `evaluator.py`. Includes resolve relative to the including file, evaluate into the same environment as prelude context, do not render included rows in the parent output, and report missing/cycle cases as warnings.
 
-Milestone 009 polishes the UI acceptance path: status text reports line count, evaluation state, and dirty/save state; dirty state compares current editor text to the last new/open/save baseline so undoing back to saved text clears the marker; warning text is word-wrapped and multi-line; rendered value placement uses sidecar `valueColumnPercent` against the current rendered pane width; the header exposes `showValuesMode` and `valueColumnPercent` controls; a New action creates an untitled sheet; rendered formulas omit display suffixes; and `spec.md` section 10 acceptance criteria have been reviewed against current behavior.
+Milestone 009 polishes the UI acceptance path: status text reports line count, evaluation state, and dirty/save state; dirty state compares current editor text to the last new/open/save baseline so undoing back to saved text clears the marker; close prompts dirty sheets with Save / Discard / Cancel; warning text is word-wrapped and multi-line; rendered value placement uses sidecar `valueColumnPercent` against the current rendered pane width; the header exposes `showValuesMode`, `valueColumnPercent`, number-format, and font controls; editor and rendered panes intentionally use the same configured font size, with small document/row spacing adjustments for readability; a New action creates an untitled sheet; rendered formulas omit display suffixes; and `spec.md` section 10 acceptance criteria have been reviewed against current behavior.
 
 Milestone 012 adds Qt-free plot artifacts and a `plot(x, y, min_x, max_x, min_y, max_y)` built-in. The evaluator validates vectors, bounds, dimensions, and ranges, returns structured `PlotArtifact` data on rendered rows, and also provides a textual summary for the existing rendered pane.
 
-Milestone 013 replaces the single rendered `QLabel` with a scrollable mixed-content widget tree: per-row selectable text labels plus `wmath.app.plot_widget.PlotWidget` instances for plot artifacts. `PlotWidget` is a lightweight PySide6/QPainter widget with axes, line segments, point markers, and min/max labels; it adds no plotting dependency.
+Milestone 013 replaces the single rendered `QLabel` with a scrollable mixed-content widget tree: per-row selectable text labels plus `wmath.app.plot_widget.PlotWidget` instances for plot artifacts. `PlotWidget` is a lightweight PySide6/QPainter widget with axes, line segments, point markers, and min/max labels; it adds no plotting dependency. The source editor and rendered pane scrollbars synchronize proportionally in both directions with a reentrancy guard.
 
 The core should expose a plain Python API:
 
@@ -71,7 +73,9 @@ class EvalOutput:
 
 The UI should consume `EvalOutput` and render rows without knowing parser internals. `wmath.app.main_window.MainWindow` currently follows this by calling the evaluator and rendering returned rows via core text-formatting helpers. The rendered pane is implemented as a selectable `QLabel` inside `QScrollArea`, not a second text editor, while still supporting basic proportional scroll sync. A Qt `QTextCursor::setPosition` warning can still appear from editor end-of-line/end-of-file interactions and is tracked as a prototype issue.
 
-Graphing preserves this boundary. The core returns structured plot artifacts for `plot(x, y, min_x, max_x, min_y, max_y)` after validating vectors, dimensions, and bounds. Textual summaries remain testable without Qt, while the PySide UI can additionally render artifacts as lightweight Qt-painted widgets in the mixed-content rendered pane. Milestone 014 should extend this without breaking compatibility by accepting grouped range vectors and an optional dimensionless size vector, storing requested size on the Qt-free artifact for the UI to honor when practical.
+Graphing preserves this boundary. The core returns structured plot artifacts for `plot(x, y, min_x, max_x, min_y, max_y)` after validating vectors, dimensions, and bounds. Textual summaries remain testable without Qt, while the PySide UI can additionally render artifacts as lightweight Qt-painted widgets in the mixed-content rendered pane. Milestone 014 extends this without breaking compatibility by accepting grouped range vectors and an optional dimensionless size vector, storing requested size on the Qt-free artifact for the UI to honor when practical.
+
+Milestone 015 adds CSV vector import while keeping storage and core UI-independent. String literal expressions support `csv("file.csv", "header")`. The evaluator uses Python's standard-library `csv` module, resolves paths relative to `EvalInput.file_path` like includes, and returns dimensionless vectors so existing unit multiplication can attach units in sheet code. It intentionally avoids pandas/numpy or any new dependency.
 
 ## Platform and Packaging Policy
 

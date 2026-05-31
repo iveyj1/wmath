@@ -1,0 +1,18 @@
+{
+  "fontFamily": "monospace",
+  "defaultFontPointSize": 11.0,
+  "fontLetterSpacingPercent": 100.0,
+  "editorFontScale": 1.0,
+  "renderedFontScale": 1.0,
+  "editorDocumentMargin": 3.0,
+  "renderedRowHeightScale": 1.15,
+  "renderedLayoutSpacing": 1,
+  "plotDefaultHeight": 180,
+  "plotMinHeight": 80,
+  "plotMaxHeight": 1200,
+  "plotOuterMargin": 6,
+  "plotLeftGutter": 44,
+  "plotTopGutter": 14,
+  "plotRightGutter": 12,
+  "plotBottomGutter": 30
+}

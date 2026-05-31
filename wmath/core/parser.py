@@ -18,6 +18,7 @@ from wmath.core.ast import (
     NumberExpr,
     SliceExpr,
     Stmt,
+    StringExpr,
     UnaryExpr,
 )
 from wmath.core.lexer import Token, lex
@@ -174,6 +175,8 @@ class Parser:
                 return NumberExpr(0.0)
         if self._match("identifier"):
             return NameExpr(self._previous().text)
+        if self._match("string"):
+            return StringExpr(self._previous().text)
         if self._match("lparen"):
             expr = self._parse_expression()
             self._consume("rparen", "expected ')'")
@@ -193,7 +196,13 @@ class Parser:
         return NumberExpr(0.0)
 
     def _starts_primary(self) -> bool:
-        return self._check("number") or self._check("identifier") or self._check("lparen") or self._check("lbracket")
+        return (
+            self._check("number")
+            or self._check("identifier")
+            or self._check("string")
+            or self._check("lparen")
+            or self._check("lbracket")
+        )
 
     def _looks_like_function_declaration(self) -> bool:
         depth = 0

@@ -25,7 +25,12 @@ class Matrix:
     rows: tuple[Vector, ...]
 
 
-Value = Scalar | Vector | Matrix | PlotArtifact
+@dataclass(frozen=True)
+class StringValue:
+    value: str
+
+
+Value = Scalar | Vector | Matrix | StringValue | PlotArtifact
 
 
 @dataclass(frozen=True)
@@ -107,24 +112,39 @@ def format_value(
     value: Value,
     display_unit: Scalar | None = None,
     display_symbol: str | None = None,
+    *,
+    significant_figures: int = 12,
+    scientific_magnitude: int = 12,
 ) -> str:
     if isinstance(value, Scalar):
-        return format_scalar(value, display_unit, display_symbol)
+        return format_scalar(value, display_unit, display_symbol, significant_figures, scientific_magnitude)
     if isinstance(value, Vector):
-        return "[" + ", ".join(format_scalar(item, display_unit, display_symbol) for item in value.items) + "]"
+        return "[" + ", ".join(
+            format_scalar(item, display_unit, display_symbol, significant_figures, scientific_magnitude)
+            for item in value.items
+        ) + "]"
+    if isinstance(value, StringValue):
+        return repr(value.value)
     if isinstance(value, Matrix):
         row_text = [
-            "[" + ", ".join(format_scalar(item, display_unit, display_symbol) for item in row.items) + "]"
+            "["
+            + ", ".join(
+                format_scalar(item, display_unit, display_symbol, significant_figures, scientific_magnitude)
+                for item in row.items
+            )
+            + "]"
             for row in value.rows
         ]
         return "[" + ", ".join(row_text) + "]"
-    return format_plot(value)
+    return format_plot(value, significant_figures, scientific_magnitude)
 
 
 def format_scalar(
     value: Scalar,
     display_unit: Scalar | None = None,
     display_symbol: str | None = None,
+    significant_figures: int = 12,
+    scientific_magnitude: int = 12,
 ) -> str:
     suffix = ""
     number = value.value
@@ -135,16 +155,18 @@ def format_scalar(
         suffix = " " + (display_symbol or _unit_symbol(display_unit.dimension))
     elif value.dimension != DIMENSIONLESS:
         suffix = " " + _unit_symbol(value.dimension)
-    return _format_number(number) + suffix
+    return _format_number(number, significant_figures, scientific_magnitude) + suffix
 
 
-def format_plot(plot: PlotArtifact) -> str:
+def format_plot(plot: PlotArtifact, significant_figures: int = 12, scientific_magnitude: int = 12) -> str:
     x_min, x_max = plot.x_range
     y_min, y_max = plot.y_range
     return (
         f"plot: {len(plot.points)} points, "
-        f"x {_format_number(x_min)}..{_format_number(x_max)}, "
-        f"y {_format_number(y_min)}..{_format_number(y_max)}"
+        f"x {_format_number(x_min, significant_figures, scientific_magnitude)}.."
+        f"{_format_number(x_max, significant_figures, scientific_magnitude)}, "
+        f"y {_format_number(y_min, significant_figures, scientific_magnitude)}.."
+        f"{_format_number(y_max, significant_figures, scientific_magnitude)}"
     )
 
 
@@ -161,7 +183,13 @@ def _unit_symbol(dimension: Dimension) -> str:
     return " ".join(parts) if parts else ""
 
 
-def _format_number(value: float) -> str:
+def _format_number(value: float, significant_figures: int = 12, scientific_magnitude: int = 12) -> str:
+    significant_figures = max(3, min(15, significant_figures))
+    scientific_magnitude = max(3, min(12, scientific_magnitude))
     if isclose(value, round(value), rel_tol=0.0, abs_tol=1e-12):
         return str(int(round(value)))
-    return f"{value:.12g}"
+    abs_value = abs(value)
+    use_scientific = abs_value != 0 and (abs_value >= 10**scientific_magnitude or abs_value < 10 ** -scientific_magnitude)
+    if use_scientific:
+        return f"{value:.{significant_figures - 1}e}"
+    return f"{value:.{significant_figures}g}"

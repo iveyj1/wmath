@@ -6,18 +6,25 @@ from PySide6.QtCore import QPointF, QRectF
 from PySide6.QtGui import QColor, QPainter, QPainterPath, QPen
 from PySide6.QtWidgets import QSizePolicy, QWidget
 
+from wmath.app.config import AppConfig
 from wmath.core.models import PlotArtifact
 
 
 class PlotWidget(QWidget):
     """Draw a simple line/point plot for a core PlotArtifact."""
 
-    def __init__(self, artifact: PlotArtifact, parent: QWidget | None = None) -> None:
+    def __init__(
+        self,
+        artifact: PlotArtifact,
+        config: AppConfig | None = None,
+        parent: QWidget | None = None,
+    ) -> None:
         super().__init__(parent)
         self.artifact = artifact
-        requested_height = artifact.requested_size[1] if artifact.requested_size is not None else 180
+        self.config = config or AppConfig()
+        requested_height = artifact.requested_size[1] if artifact.requested_size is not None else self.config.plotDefaultHeight
         self.setMinimumWidth(0)
-        self.setMinimumHeight(max(80, min(1200, requested_height)))
+        self.setMinimumHeight(max(self.config.plotMinHeight, min(self.config.plotMaxHeight, requested_height)))
         self.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Fixed)
 
     def paintEvent(self, event) -> None:  # noqa: N802
@@ -25,7 +32,8 @@ class PlotWidget(QWidget):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
-        available = QRectF(self.rect().adjusted(6, 6, -6, -6))
+        outer = self.config.plotOuterMargin
+        available = QRectF(self.rect().adjusted(outer, outer, -outer, -outer))
         requested_width = self.artifact.requested_size[0] if self.artifact.requested_size is not None else None
         full_width = available.width()
         if requested_width is not None:
@@ -35,7 +43,14 @@ class PlotWidget(QWidget):
         painter.setPen(QPen(QColor("#cccccc"), 1))
         painter.drawRect(full)
 
-        plot_rect = QRectF(full.adjusted(44, 14, -12, -30))
+        plot_rect = QRectF(
+            full.adjusted(
+                self.config.plotLeftGutter,
+                self.config.plotTopGutter,
+                -self.config.plotRightGutter,
+                -self.config.plotBottomGutter,
+            )
+        )
         if plot_rect.width() <= 0 or plot_rect.height() <= 0:
             return
 
