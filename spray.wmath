@@ -1,0 +1,27 @@
+include "units.msheet"
+
+length = 3 * m
+width = 2 * m
+area = length * width |
+force = 10 * N
+work = force * length |
+myvar = 1
+myvector = [1, 2, 3]
+bv = myvector * 2.25
+long = append(myvector, bv)
+fifth = long[5]
+big = 6.023*10^23
+
+myvector * bv |
+
+
+#sprayer calculations
+tankVolume = 40 *gal | 
+agentFilmThickness = 2 * qt/ac
+sprayWidth = 48 * in
+sprayFlow = 1 * gal/min
+travelSpeed = 4 * mi/hr
+mixFilmThickness = sprayFlow/(travelSpeed*sprayWidth)|
+mixRatio = agentFilmThickness/mixFilmThickness | unitless
+agentVolume = tankVolume*mixRatio | qt
+areaPerTank = tankVolume/sprayFlow*travelSpeed*sprayWidth | ac
