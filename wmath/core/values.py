@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 from math import isclose
 
@@ -186,10 +187,13 @@ def _unit_symbol(dimension: Dimension) -> str:
 def _format_number(value: float, significant_figures: int = 12, scientific_magnitude: int = 12) -> str:
     significant_figures = max(3, min(15, significant_figures))
     scientific_magnitude = max(3, min(12, scientific_magnitude))
-    if isclose(value, round(value), rel_tol=0.0, abs_tol=1e-12):
-        return str(int(round(value)))
     abs_value = abs(value)
-    use_scientific = abs_value != 0 and (abs_value >= 10**scientific_magnitude or abs_value < 10 ** -scientific_magnitude)
+    use_scientific = False
+    if abs_value != 0:
+        exponent = math.floor(math.log10(abs_value))
+        use_scientific = exponent >= scientific_magnitude or exponent <= -scientific_magnitude
     if use_scientific:
         return f"{value:.{significant_figures - 1}e}"
+    if isclose(value, round(value), rel_tol=0.0, abs_tol=1e-12):
+        return str(int(round(value)))
     return f"{value:.{significant_figures}g}"

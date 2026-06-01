@@ -69,9 +69,15 @@ def test_evaluator_all_values_mode_ignores_display_marker_state() -> None:
 
 def test_evaluator_number_format_metadata_controls_output() -> None:
     metadata = SheetMetadata(significantFigures=4, scientificMagnitude=3)
-    output = evaluate(EvalInput("12345.6789 |\n0.00012345 |", metadata=metadata))
+    output = evaluate(EvalInput("1234.56789 |\n1234 |\n123.456789 |\n0.0012345 |\n0.012345 |", metadata=metadata))
 
-    assert [row.value for row in output.rows] == ["1.235e+04", "1.234e-04"]
+    assert [row.value for row in output.rows] == [
+        "1.235e+03",
+        "1.234e+03",
+        "123.5",
+        "1.234e-03",
+        "0.01235",
+    ]
 
 
 def test_evaluator_rendered_formula_omits_display_suffix() -> None:

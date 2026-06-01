@@ -54,7 +54,7 @@ Milestone 009 polishes the UI acceptance path: status text reports line count, e
 
 Milestone 012 adds Qt-free plot artifacts and a `plot(x, y, min_x, max_x, min_y, max_y)` built-in. The evaluator validates vectors, bounds, dimensions, and ranges, returns structured `PlotArtifact` data on rendered rows, and also provides a textual summary for the existing rendered pane.
 
-Milestone 013 replaces the single rendered `QLabel` with a scrollable mixed-content widget tree: per-row selectable text labels plus `wmath.app.plot_widget.PlotWidget` instances for plot artifacts. `PlotWidget` is a lightweight PySide6/QPainter widget with axes, line segments, point markers, and min/max labels; it adds no plotting dependency. The source editor and rendered pane scrollbars synchronize proportionally in both directions with a reentrancy guard.
+Milestone 013 replaces the single rendered `QLabel` with a scrollable mixed-content widget tree: per-row selectable text labels plus `wmath.app.plot_widget.PlotWidget` instances for plot artifacts. `PlotWidget` is a lightweight PySide6/QPainter widget with axes, line segments, point markers, and min/max labels; it adds no plotting dependency. The source editor and rendered pane scrollbars synchronize in both directions using source-line/rendered-row anchors with a reentrancy guard rather than proportional scrollbar ranges, because `QPlainTextEdit` and the mixed rendered pane use different scroll metrics.
 
 The core should expose a plain Python API:
 

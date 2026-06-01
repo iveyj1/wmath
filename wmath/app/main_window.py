@@ -58,6 +58,7 @@ class MainWindow(QMainWindow):
         self._last_output: EvalOutput | None = None
         self._active_line = 0
         self._syncing_scroll = False
+        self._rendered_row_widgets: list[QWidget] = []
         self._app_config = load_app_config()
 
         self._saved_source = ""
@@ -411,13 +412,14 @@ class MainWindow(QMainWindow):
         scroll_value = self.rendered_scroll.verticalScrollBar().value()
         self._clear_rendered_layout()
         line_width = self._rendered_line_width()
+        self._rendered_row_widgets = []
         for row in output.rows:
             row_label = QLabel(self.rendered_content)
             row_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
             row_label.setMinimumWidth(0)
             row_label.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
             row_label.setFont(self._render_font())
-            row_label.setMinimumHeight(
+            row_label.setFixedHeight(
                 round(row_label.fontMetrics().height() * self._app_config.renderedRowHeightScale)
             )
             row_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
@@ -431,6 +433,7 @@ class MainWindow(QMainWindow):
                 )
             )
             self.rendered_layout.addWidget(row_label)
+            self._rendered_row_widgets.append(row_label)
             if row.artifact is not None:
                 self.rendered_layout.addWidget(PlotWidget(row.artifact, self._app_config, self.rendered_content))
         self.rendered_layout.addStretch(1)
@@ -438,6 +441,7 @@ class MainWindow(QMainWindow):
         self._update_warning_bar(output)
 
     def _clear_rendered_layout(self) -> None:
+        self._rendered_row_widgets = []
         while self.rendered_layout.count():
             item = self.rendered_layout.takeAt(0)
             widget = item.widget()
@@ -458,27 +462,37 @@ class MainWindow(QMainWindow):
         self.warning_bar.setText(warning_text)
         self.warning_bar.setVisible(bool(warning_text))
 
-    def _sync_render_scroll(self, editor_value: int) -> None:
+    def _sync_render_scroll(self, _editor_value: int) -> None:
         if self._syncing_scroll:
             return
-        self._sync_scrollbars(self.editor.verticalScrollBar(), self.rendered_scroll.verticalScrollBar(), editor_value)
-
-    def _sync_editor_scroll(self, render_value: int) -> None:
-        if self._syncing_scroll:
+        row_index = self.editor.firstVisibleBlock().blockNumber()
+        if row_index < 0 or row_index >= len(self._rendered_row_widgets):
             return
-        self._sync_scrollbars(self.rendered_scroll.verticalScrollBar(), self.editor.verticalScrollBar(), render_value)
-
-    def _sync_scrollbars(self, source_bar, target_bar, source_value: int) -> None:
-        if source_bar.maximum() <= source_bar.minimum():
-            target_value = target_bar.minimum()
-        else:
-            ratio = (source_value - source_bar.minimum()) / (source_bar.maximum() - source_bar.minimum())
-            target_value = round(target_bar.minimum() + ratio * (target_bar.maximum() - target_bar.minimum()))
+        target_value = self._rendered_row_widgets[row_index].y()
         self._syncing_scroll = True
         try:
-            target_bar.setValue(target_value)
+            self.rendered_scroll.verticalScrollBar().setValue(target_value)
         finally:
             self._syncing_scroll = False
+
+    def _sync_editor_scroll(self, render_value: int) -> None:
+        if self._syncing_scroll or not self._rendered_row_widgets:
+            return
+        row_index = self._rendered_row_index_at(render_value)
+        self._syncing_scroll = True
+        try:
+            self.editor.verticalScrollBar().setValue(row_index)
+        finally:
+            self._syncing_scroll = False
+
+    def _rendered_row_index_at(self, render_value: int) -> int:
+        best_index = 0
+        for index, widget in enumerate(self._rendered_row_widgets):
+            if widget.y() <= render_value:
+                best_index = index
+            else:
+                break
+        return best_index
 
     def resizeEvent(self, event) -> None:  # noqa: N802
         super().resizeEvent(event)

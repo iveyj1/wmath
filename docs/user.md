@@ -54,7 +54,7 @@ Include files are evaluated before following rows, but their rows are not render
 
 ## Prototype UI Tuning
 
-For now, local prototype spacing/font tuning is read from `wmath_config.json` in the current working directory. It controls font family, letter spacing, editor/rendered font scaling, row height, layout spacing, and plot margins. Restart the app after editing it.
+For now, local prototype spacing/font tuning is read from `wmath_config.json` in the current working directory. It controls font family, letter spacing, editor/rendered font scaling, rendered row height, layout spacing, and plot margins. Restart the app after editing it.
 
 Sheet-specific metadata still controls visible header settings such as `Font`, `Sig`, `Sci`, `Value %`, and `All values`.
 
@@ -232,7 +232,7 @@ Current metadata keys:
 - `showValuesMode`: `explicit` or `all_assignments`
 - `valueColumnPercent`: number clamped to 40..90. This controls approximate value placement as a percentage of the rendered pane width.
 - `significantFigures`: integer clamped to 3..15. This controls rendered numeric precision.
-- `scientificMagnitude`: integer clamped to 3..12. Numbers with magnitude outside `10^±scientificMagnitude` render in scientific notation.
+- `scientificMagnitude`: integer clamped to 3..12. Numbers render in scientific notation when their base-10 exponent is greater than or equal to this threshold, or less than or equal to its negative.
 - `fontPointSize`: number clamped to 0..36. `0` uses the platform default; positive values set the rendered font size.
 
 The header controls edit these metadata values:
@@ -240,7 +240,7 @@ The header controls edit these metadata values:
 - `All values`: toggles `showValuesMode` between explicit `|` display and showing all evaluated values.
 - `Value %`: moves the value column position across the rendered pane width.
 - `Sig`: controls significant figures for rendered numbers.
-- `Sci`: controls when rendered numbers switch to scientific notation.
+- `Sci`: controls when rendered numbers switch to scientific notation by base-10 exponent threshold.
 - `Font`: controls editor and rendered pane font size.
 
 Recent files are stored as local client state under the platform state directory. Current Linux default:
