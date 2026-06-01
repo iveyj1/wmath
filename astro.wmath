@@ -1,0 +1,39 @@
+include "constants.wmath"
+km = 1000m
+hr = 3600 s
+min = 60 s
+day = 24 hr
+yr = 365 day
+ly = 9.4607 * 10^12 km 
+um = 10^-6 m
+yr | s
+
+m_sol = 1.98847 * 10^30 kg
+
+# Mass and distance to the Andromeda galaxy
+m_andromeda = 1.5 * 10^12 m_sol
+r_andromeda = 2.54 * 10^6 ly
+
+# Newtonian gravity formula - force
+f_g(m1, m2, r) = m1 * m2 * G / r^2
+
+# Newtonian acceleration
+a_g(m1,r) = m1 * G / r^2
+
+t_fall = 1 yr
+
+# Acceleration at earth due to Andromeda's gravity
+a_g_earth_andromeda = a_g(m_andromeda, r_andromeda) | g0
+
+v_g_earth_andromeda = a_g_earth_andromeda * t_fall | um/s
+
+# Distance an object moves in a year due to Andromeda's gravity
+x_g_earth_andromeda = (1/2) * a_g_earth_andromeda * t_fall^2
+
+m_jupiter = 1.9*10^27kg
+r_jupiter = 7.0*10^11m
+
+a_g_earth_jupiter = a_g(m_jupiter, r_jupiter) | g0
+
+x_g_earth_jupiter = (1.2)*a_g_earth_jupiter * t_fall^2 |km
+
